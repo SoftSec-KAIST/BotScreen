@@ -1,0 +1,8 @@
+.DS_Store
+__pycache__
+data_processed
+data_loss
+trained_models
+figures
+bench
+*.pickle
