@@ -10,9 +10,6 @@ The code requires dependencies that can be installed using the `pip` environment
 $ pip3 install -r requirements.txt
 ```
 
-## Citation
-TODO
-
 ## Replicating Benchmark Results
 
 ### Downloading preprocessed data
@@ -77,3 +74,15 @@ By default, we did not include any figures, data and benchmark results. The file
 ## End-to-End Implementation
 
 [TODO]
+
+## Citation
+If you find the provided code useful, please cite our work.
+```
+@inproceedings{
+    choi2022botscreen,
+    title={BotScreen: Enabling Distributed and Real-Time Aimbot Detection},
+    author={Minyeop Choi and Gihyuk Ko and Sang Kil Cha},
+    booktitle={CCS},
+    year={2022}
+}
+```
