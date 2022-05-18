@@ -165,18 +165,32 @@ def get_votes_attack(preds, teams, n_atk=1, attacker=None, seed=0):
     np.random.seed(seed)
 
     # randomly select attackers
-    attackers = np.random.choice(range(l),size=n_atk)
+    #attackers = np.random.choice(range(l), size=n_atk, replace=False)
 
-    # flip vote
-    if attacker == 'dishonest-but-rational':
+    # divide teams
+    t_a = np.where(teams[0,:] == 0)[0]
+    t_b = np.where(teams[0,:] == 1)[0]
+    n_a = int(n_atk/2)
+    n_b = n_atk - n_a
+
+    # randomly select attackers
+    atk_a = np.random.choice(t_a, size=n_a, replace=False)
+    atk_b = np.random.choice(t_b, size=n_b, replace=False)
+    attackers = np.concatenate([atk_a, atk_b])
+
+    # modify vote
+    if attacker == 'dishonest-but-rational (all)':
         for a in attackers:
             preds[a,:] = abs(teams[a,:] - 1)
+    elif attacker == 'dishonest-but-rational (allies)':
+        for a in attackers:
+            preds[a,:] = np.where(teams[a,:],np.zeros_like(teams[a,:]),preds[a,:])
     elif attacker == 'dishonest (flip)':
         for a in attackers:
             preds[a,:] = abs(preds[a,:] - 1)
     elif attacker == 'dishonest (random)':
         for a in attackers:
-            preds[a,:] = np.random.randint(2,size=l)
+            preds[a,:] = np.random.randint(2, size=l)
     else:
         print('error!')
         exit()

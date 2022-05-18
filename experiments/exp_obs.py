@@ -6,9 +6,9 @@ from utils import *
 e = exp_from_arguments()        # get arguments
 
 # placeholders for results
-res = {'accuracy': [],
-       'measure': [],
-       'team': []}
+res = {'Accuracy': [],
+       'Measure': [],
+       'Target player': []}
 accs, obsrates = [], []
 
 # for each split
@@ -85,9 +85,10 @@ for i,test_games in enumerate(e.splits):
     acc_diff = sum(correct[team_list == False])/sum(team_list == False)
 
     # record results
-    res['accuracy'].extend([acc_same, acc_diff, obs_same, obs_diff])
-    res['measure'].extend(['accuracy', 'accuracy', 'obsrate', 'obsrate'])
-    res['team'].extend(['ally', 'enemy', 'ally', 'enemy'])
+    res['Accuracy'].extend([acc_same, acc_diff, obs_same, obs_diff])
+    res['Measure'].extend(['prediction acc.', 'prediction acc.',
+                           'observation rate', 'observation rate'])
+    res['Target player'].extend(['An ally', 'An opponent', 'An ally', 'An opponent'])
 
     accs.extend([acc_same, acc_diff])
     obsrates.extend([obs_same, obs_diff])
@@ -97,9 +98,11 @@ res = pd.DataFrame(res)
 
 os.makedirs('figures',exist_ok=True)
 sns.set_theme(style="whitegrid")
-sns.boxplot(x='team', y='accuracy', hue='measure', data=res)
-plt.legend()
-plt.savefig('figures/fig_06_obsrate.pdf')
+sns.boxplot(x='Target player', y='Accuracy', hue='Measure', data=res)
+plt.ylabel('')
+plt.ylim(top=1.0)
+plt.legend(loc='lower left')
+plt.savefig('figures/fig_06_obs.pdf')
 
 # calculate Pearson Correlation Coefficient
 pcc = np.corrcoef(obsrates, accs)[0,1]

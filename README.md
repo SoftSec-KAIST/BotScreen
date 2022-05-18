@@ -58,10 +58,10 @@ The following table summarizes experiments and corresponding results in the pape
 | - | - | - | - |
 | `experiments/exp_bench` | Aimbot prediction performance | [`bench.tsv`](./bench/bench.tsv) | 6.2 |
 | `experiments/exp_roc` | Plot ROC curves | [Figure 4](./figures/fig_04_roc.pdf) | 6.2 |
-| `experiments/exp_frame` | Difference btw. anomaly scores | [Figure 5](./figures/fig_05_std.pdf) | 6.4 |
+| `experiments/exp_std` | Difference btw. anomaly scores | [Figure 5](./figures/fig_05_std.pdf) | 6.4 |
 | `experiments/stats_obs` | Stats of obs. rate (required before exp_obs) | [`data_loss/`](./data_loss) | 6.4 |
 | `experiments/exp_obs` | Effect of obs. rate to accuracy | [Figure 6](./figures/fig_06_obsrate.pdf) | 6.4 |
-| `experiments/exp_atk` | Effect of dishonest players | [Figure 7](./figures/fig_07_atk.pdf), [`bench_atk.tsv`](./bench/bench_atk.tsv), [`bench_atk_wa.tsv`](./bench/bench_atk_wa.tsv) | 6.5 |
+| `experiments/exp_atk` | Effect of dishonest players | [Figure 7](./figures/fig_07_atk.pdf), [`bench_atk.tsv`](./bench/bench_atk.tsv) | 6.5 |
 | `comp_study/th_vara` | Pred. performance of `th_vara` | - | 6.3 |
 | `comp_study/th_acca` | Pred. performance of `th_acca` | - | 6.3 |
 | `comp_study/th_kill` | Pred. performance of `th_kill` | - | 6.3 |
