@@ -7,7 +7,7 @@ e = exp_from_arguments()        # get arguments
 
 # arguments for repeated experiments
 n_atks = range(11)
-seeds = range(5)
+seeds = range(11)
 attackers = ['dishonest (flip)',
              'dishonest (random)',
              'dishonest-but-rational (all)',

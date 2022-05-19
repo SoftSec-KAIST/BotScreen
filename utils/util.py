@@ -164,18 +164,22 @@ def get_votes_attack(preds, teams, n_atk=1, attacker=None, seed=0):
     # set seed
     np.random.seed(seed)
 
-    # randomly select attackers
-    #attackers = np.random.choice(range(l), size=n_atk, replace=False)
-
     # divide teams
     t_a = np.where(teams[0,:] == 0)[0]
     t_b = np.where(teams[0,:] == 1)[0]
-    n_a = int(n_atk/2)
-    n_b = n_atk - n_a
+    n_1 = int(n_atk/2)
+    n_2 = n_atk - n_1
 
     # randomly select attackers
-    atk_a = np.random.choice(t_a, size=n_a, replace=False)
-    atk_b = np.random.choice(t_b, size=n_b, replace=False)
+    if n_1 == n_2:
+        atk_a = np.random.choice(t_a, size=n_1, replace=False)
+        atk_b = np.random.choice(t_b, size=n_2, replace=False)
+    elif np.random.uniform() >= 0.5:
+        atk_a = np.random.choice(t_a, size=n_1, replace=False)
+        atk_b = np.random.choice(t_b, size=n_2, replace=False)
+    else:
+        atk_a = np.random.choice(t_a, size=n_2, replace=False)
+        atk_b = np.random.choice(t_b, size=n_1, replace=False)
     attackers = np.concatenate([atk_a, atk_b])
 
     # modify vote

@@ -82,7 +82,7 @@ If you find the provided code useful, please cite our work.
     choi2022botscreen,
     title={BotScreen: Enabling Distributed and Real-Time Aimbot Detection},
     author={Minyeop Choi and Gihyuk Ko and Sang Kil Cha},
-    booktitle={CCS},
+    booktitle={TBD},
     year={2022}
 }
 ```
