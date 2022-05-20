@@ -38,4 +38,4 @@ preprocess_all:
 
 ##### clean everything #####
 clean:
-	rm -rf __pycache__
+	@find . -name '__pycache__' -type d -exec rm -rf {} +
