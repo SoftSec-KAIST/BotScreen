@@ -3,7 +3,6 @@ from functools import reduce
 from itertools import *
 from more_itertools import *
 from sklearn.metrics import *
-from TaPR_pkg import etapr
 
 import os, sys, random
 import json, pickle
@@ -91,33 +90,6 @@ def acc_thresh(score, labels):
         acc = (tp + tn) / total
         th_acc.append((th, acc))
     return max(th_acc, key=lambda x: x[1])[0]
-
-# threshold that maximizes tapr
-def tapr_thresh(score, labels):
-    # initial values
-    tap, tar = 0.0, 1.0     # initial recall and precision
-    q = 1 - sum(labels)/len(labels)     # initial quantile
-    d = (1-q)/2
-    delta = 0.01
-    max_iter = 20
-    # loop until tap and tar are close enough
-    n_iter = 0
-    while abs(tap - tar) > delta:
-        t, d = np.quantile(score, q), d/2      # update t and d
-        preds = score >= t
-        tapr = etapr.evaluate_haicon(anomalies=labels, predictions=preds)
-        tap, tar = float(tapr['TaP']), float(tapr['TaR'])
-
-        if tar > tap:
-            q = q + d
-        else:
-            q = q - d
-
-        n_iter += 1
-        if n_iter >= max_iter:
-            break
-
-    return t
 
 # get auc from scores
 def get_score(score, labels):
