@@ -382,7 +382,7 @@ def eval_preds(eval_trues, eval_scores, incl_cnt=False):
     auc = roc_auc_score(t_agg, s_agg)
 
     # confusion matrix under best accuracy threshold
-    conf_mat = conf_matrix(t_agg, p_agg_acc)
+    conf_mat = conf_matrix(p_agg_acc, t_agg)
 
     if incl_cnt:
         return b_acc, b_prec, auc, len(p_agg_prec), *conf_mat
