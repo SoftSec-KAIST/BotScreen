@@ -62,10 +62,13 @@ The following table summarizes experiments and corresponding results in the pape
 | `experiments/stats_obs` | Stats of obs. rate (required before exp_obs) | [`data_loss/`](./data_loss) | 6.4 |
 | `experiments/exp_obs` | Effect of obs. rate to accuracy | [Figure 6](./figures/fig_06_obsrate.pdf) | 6.4 |
 | `experiments/exp_atk` | Effect of dishonest players | [Figure 7](./figures/fig_07_atk.pdf), [`bench_atk.tsv`](./bench/bench_atk.tsv) | 6.5 |
-| `comp_study/th_vara` | Pred. performance of `th_vara` | - | 6.3 |
-| `comp_study/th_acca` | Pred. performance of `th_acca` | - | 6.3 |
-| `comp_study/th_kill` | Pred. performance of `th_kill` | - | 6.3 |
-| `comp_study/ks_acca` | Pred. performance of `ks_acca` | - | 6.3 |
+| `comp_study/th_vara` | Pred. performance of `th_VarA` | - | 6.3 |
+| `comp_study/th_acca` | Pred. performance of `th_AccA` | - | 6.3 |
+| `comp_study/th_kill` | Pred. performance of `th_Kill` | - | 6.3 |
+| `comp_study/ks_acca` | Pred. performance of `ks_AccA` | - | 6.3 |
+| `comp_study/os_cac` | Pred. performance of `os_CAC` | - | 6.3 |
+| `comp_study/os_lac` | Pred. performance of `os_LAC` | - | 6.3 |
+| `comp_study/os_smac` | Pred. performance of `os_SMAC` | - | 6.3 |
 | `experiments/exp_cnt` | Average number of reports and FPs by each client, per game | - | 6.2 |
 
 Note that in order for `experiments/exp_obs` to properly output expected results, running `experiments/stat_obs` must be preceeded. Additionally, `.tsv` files will be saved once `save_results=True` argument is passed alongside other arguments.
