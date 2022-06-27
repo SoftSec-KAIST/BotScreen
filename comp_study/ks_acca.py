@@ -44,7 +44,7 @@ def gacc(lst):
 bins = []
 
 try:
-    with open("comp_study/acca.pickle", "rb") as f:
+    with open("f.pickle", "rb") as f:
         bins = pickle.load(f)
 except:
     for game in sorted(glob('data_processed/*/*')):
@@ -88,10 +88,10 @@ except:
         bins.append((cheater, ds))
 
 import pickle
-with open("comp_study/acca.pickle", "wb") as f:
+with open("f.pickle", "wb") as f:
     pickle.dump(bins, f, pickle.HIGHEST_PROTOCOL)
 
-bins = list(filter(lambda x: len(x[0]) == 2, bins))
+#bins = list(filter(lambda x: len(x[0]) == 2, bins))
 
 import random
 random.seed(0)
@@ -100,27 +100,28 @@ random.shuffle(bins)
 from scipy.stats import ks_2samp
 
 # 7 fold
+TP, TN, FP, FN = 0, 0, 0, 0
 for i in range(7): # test set
     benign_ds = []
     aimbot_ds = []
-    TP, TN, FP, FN = 0, 0, 0, 0
+
     for j in range(len(bins)):
-        if (j // 3) != i:
+        if (j // 4) != i:
             cheater, dat = bins[j]
             for k in range(len(dat)):
                 if k not in cheater:
                     benign_ds += dat[k]
                 else:
                     aimbot_ds += dat[k]
-    for j in range(3):
-        cheater, dat = bins[3 * i + j]
+    for j in range(4):
+        cheater, dat = bins[4 * i + j]
         for k in range(len(dat)):
-            for tt in range(30):
+            for tt in range(1):
                 test_samp = random.sample(dat[k], 100)
                 gult = 0
                 ngult = 0
-                for tran_c in range(200):
-                    r = random.randrange(100) & 1
+                for tran_c in range(300):
+                    r = random.randrange(2)
                     if r:
                         tran_samp = random.sample(benign_ds, 100)
                     else:
@@ -146,5 +147,13 @@ for i in range(7): # test set
                     else:
                         TN += 1
 
-    print('Existing method: ks_AccA')
-    print(TP, TN, FP, FN, (TP + TN) / (TP + TN + FP + FN), TP / (TP + FP), )
+# performance measures
+acc = float(TP + TN)/float(TP + TN + FN + FP)
+fpr = float(FP)/float(FP + TN)
+fnr = float(FN)/float(FN + TP)
+
+print('Existing method: ks_AccA')
+print('accuracy: {:.4f} ({}/{})'.format(acc, TP+TN, TP+TN+FP+FN))
+print('fpr: {:.4f} ({}/{})'.format(fpr, FP, FP+TN))
+print('fnr: {:.4f} ({}/{})'.format(fnr, FN, FN+TP))
+print(f'TP: {TP}, TN: {TN}, FP: {FP}, FN: {FN}')

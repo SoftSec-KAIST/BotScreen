@@ -36,11 +36,20 @@ for game in sorted(glob('data_processed/*/*')):
     eval_scores[game] = scores
 
 # evaluate prediction performance
-b_acc, b_prec, auc, _, tp, tn, fp, fn = eval_preds(eval_trues, eval_scores, incl_cnt=True)
+b_acc, b_prec, auc, _, TP, TN, FP, FN = eval_preds(eval_trues, eval_scores, incl_cnt=True)
 
 eprint('done\n\n')
 
 # print results
 print('Baseline method: th_Kill')
 print(f'best_acc: {b_acc:.4f}, best_prec: {b_prec:.4f}, auc_roc: {auc:.4f}')
-print(f'TP: {tp}, TN: {tn}, FP: {fp}, FN: {fn}')
+
+# performance measures
+acc = float(TP + TN)/float(TP + TN + FN + FP)
+fpr = float(FP)/float(FP + TN)
+fnr = float(FN)/float(FN + TP)
+
+print('accuracy: {:.4f} ({}/{})'.format(acc, TP+TN, TP+TN+FP+FN))
+print('fpr: {:.4f} ({}/{})'.format(fpr, FP, FP+TN))
+print('fnr: {:.4f} ({}/{})'.format(fnr, FN, FN+TP))
+print(f'TP: {TP}, TN: {TN}, FP: {FP}, FN: {FN}')
