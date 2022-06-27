@@ -38,7 +38,7 @@ for i,test_games in enumerate(e.splits):
         exit()
 
     # evaluate prediction performance
-    res.append(eval_preds(eval_trues, eval_scores))
+    res.append(eval_preds(eval_trues, eval_scores, incl_cnt=True))
 
     eprint('done\n\n')
 
@@ -55,17 +55,20 @@ if e.save_results:
     for i,row in enumerate(res):
         info = map(str,[e.n_split,i,e.win_size,e.duration,e.seed])
         stats = map(lambda s: f'{s:.4f}', row[:3])
+        cnts = map(lambda s: str(int(s)), row[3:])
 
         with open('bench/bench.tsv','a') as f:
             f.write('\t'.join(info))
             f.write('\t')
-            f.write('\t'.join(stats))
-            f.write('\t' + str(int(row[-1])))
+            f.write('\t'.join(stats) + '\t')
+            f.write('\t'.join(cnts))
             f.write('\n')
 
 
-# weighted average for the experiment
+# aggregating results from all splits
 res = np.array(res)
-b_acc, b_prec, auc = np.average(res[:,:3], axis=0, weights=res[:,-1])
+b_acc, b_prec, auc = np.average(res[:,:3], axis=0, weights=res[:,3])
+tp, tn, fp, fn = np.sum(res[:,4:], axis=0, dtype=int)
 print('Botscreen:')
 print(f'best_acc: {b_acc:.4f}, best_prec: {b_prec:.4f}, auc_roc: {auc:.4f}')
+print(f'TP: {tp}, TN: {tn}, FP: {fp}, FN: {fn}')

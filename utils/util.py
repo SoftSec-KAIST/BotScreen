@@ -103,6 +103,22 @@ def get_stats(preds, labels):
     f1 = f1_score(labels, preds)
     return (acc, prec, rec, f1)
 
+# confusion matrix
+def conf_matrix(preds, labels):
+    TP, TN, FP, FN = 0, 0, 0, 0
+
+    for i in range(len(preds)):
+        if labels[i]==preds[i]==1:
+           TP += 1
+        if preds[i]==1 and labels[i]!=preds[i]:
+           FP += 1
+        if labels[i]==preds[i]==0:
+           TN += 1
+        if preds[i]==0 and labels[i]!=preds[i]:
+           FN += 1
+
+    return(TP, TN, FP, FN)
+
 # stats
 def nanstats(scores):
     if len(scores) == 0:
@@ -323,13 +339,14 @@ def team_indicator(teams):
     return ind
 
 # evaluate prediction accuracies based on true labels and scores
-def eval_preds(eval_trues, eval_scores):
+def eval_preds(eval_trues, eval_scores, incl_cnt=False):
     """ Evaluate prediction accuracies for given true labels and scores
 
     Parameters
     ----------
     eval_trues: dictionary of true labels for each game
     eval_scores: dictionary of scores for each game
+    incl_cnt: include absolute counts
 
     Returns
     ----------
@@ -339,25 +356,36 @@ def eval_preds(eval_trues, eval_scores):
     """
 
     # placeholder for aggregated predictions
-    p_agg = []
+    p_agg_prec, p_agg_acc = [], []
 
     # aggregated true labels and boundary error scores
     t_agg = np.concatenate([get_votes(t)[0] for t in eval_trues.values()])
     s_agg = sum([get_median(s) for s in eval_scores.values()], [])
 
     # determine threshold based on scores and labels
-    thresh = get_thresh(s_agg, t_agg, maximize='prec')
+    thresh_prec = get_thresh(s_agg, t_agg, maximize='prec')
+    thresh_acc = get_thresh(s_agg, t_agg, maximize='acc')
 
-    # prediction based on scores and threshold
+    # predictions based on scores and threshold
     for scores in eval_scores.values():
-        preds = scores > thresh
-        p,_ = get_votes(preds)
+        preds_prec = scores > thresh_prec
+        preds_acc = scores > thresh_acc
+        p_prec,_ = get_votes(preds_prec)
+        p_acc,_ = get_votes(preds_acc)
 
-        p_agg.extend(p)
+        p_agg_prec.extend(p_prec)
+        p_agg_acc.extend(p_acc)
 
     # evaluation metrics: best_acc, best_prec, auc_roc
     b_acc = best_acc(s_agg, t_agg)
-    b_prec = get_stats(p_agg, t_agg)[0]
+    b_prec = get_stats(p_agg_prec, t_agg)[0]
     auc = roc_auc_score(t_agg, s_agg)
 
-    return b_acc, b_prec, auc, len(p_agg)
+    # confusion matrix under best accuracy threshold
+    conf_mat = conf_matrix(t_agg, p_agg_acc)
+
+    if incl_cnt:
+        return b_acc, b_prec, auc, len(p_agg_prec), *conf_mat
+    else:
+        return b_acc, b_prec, auc, len(p_agg_prec)
+

@@ -66,6 +66,7 @@ The following table summarizes experiments and corresponding results in the pape
 | `comp_study/th_acca` | Pred. performance of `th_acca` | - | 6.3 |
 | `comp_study/th_kill` | Pred. performance of `th_kill` | - | 6.3 |
 | `comp_study/ks_acca` | Pred. performance of `ks_acca` | - | 6.3 |
+| `experiments/exp_cnt` | Average number of reports and FPs by each client, per game | - | 6.2 |
 
 Note that in order for `experiments/exp_obs` to properly output expected results, running `experiments/stat_obs` must be preceeded. Additionally, `.tsv` files will be saved once `save_results=True` argument is passed alongside other arguments.
 

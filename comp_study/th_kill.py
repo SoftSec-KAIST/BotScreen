@@ -36,10 +36,11 @@ for game in sorted(glob('data_processed/*/*')):
     eval_scores[game] = scores
 
 # evaluate prediction performance
-b_acc, b_prec, auc, _ = eval_preds(eval_trues, eval_scores)
+b_acc, b_prec, auc, _, tp, tn, fp, fn = eval_preds(eval_trues, eval_scores, incl_cnt=True)
 
 eprint('done\n\n')
 
 # print results
 print('Baseline method: th_Kill')
 print(f'best_acc: {b_acc:.4f}, best_prec: {b_prec:.4f}, auc_roc: {auc:.4f}')
+print(f'TP: {tp}, TN: {tn}, FP: {fp}, FN: {fn}')

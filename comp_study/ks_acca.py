@@ -146,5 +146,5 @@ for i in range(7): # test set
                     else:
                         TN += 1
 
-    print('Previous method: ks_AccA')
+    print('Existing method: ks_AccA')
     print(TP, TN, FP, FN, (TP + TN) / (TP + TN + FP + FN), TP / (TP + FP), )

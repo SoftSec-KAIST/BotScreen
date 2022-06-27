@@ -119,7 +119,7 @@ def exp_from_arguments():
 
 
 ### return max anomaly score
-def anom_score(m, e, key, use_all=True):
+def anom_score(m, e, key, use_all=True, return_all=False):
     """ Get max anomaly scores for given events
 
     Parameters
@@ -160,7 +160,10 @@ def anom_score(m, e, key, use_all=True):
     # choose data to use based on the predicate
     score = score if use_all else score_new
 
-    return y_true, max(score)
+    if return_all:
+        return y_true, score
+    else:
+        return y_true, max(score)
 
 
 ### return max anomaly score
