@@ -20,7 +20,7 @@ While no longer functional, we include the script used in preprocessing in the r
 
 ### Training SGRU models
 
-For exact replication of the results in the paper, it is recommended to download weights of pre-trained SGRU models from [this link](https://drive.google.com/file/d/11c6YGBFEQC344Jvy9e9atz25pZ5K8nyR/view?usp=sharing). The compressed file (`best_models.zip`) in the link consists of 7 pre-trained model weights (`gru_k0.pt` ~ `gru_k6.pt`) and a JSON configuration file (`config.json`).
+For exact replication of the results in the paper, it is recommended to download weights of pre-trained SGRU models from [this link](https://drive.google.com/file/d/11e4lnYkQ2km_DsvI5_MPMclX_yITyqcZ/view?usp=sharing). The compressed file (`best_models.zip`) in the link consists of 7 pre-trained model weights (`gru_k0.pt` ~ `gru_k6.pt`) and a JSON configuration file (`config.json`).
 
 Simply make `trained_models/` directory and unzip `best_model.zip` in the directory to finish the setup.
 
@@ -42,7 +42,7 @@ $ make eval [arguments]
 ```
 The above command generates and saves ground truths and evaluation scores for each model. If the pre-trained model weights and configuration are used, running above will produce `eval_k0.pt` ~ `eval_k6.pt` in `trained_models`.
 
-We make pre-evaluated data avaiable to download [here](https://drive.google.com/file/d/11a2vpY5Af_6_a43ZYIRmpYQYZ9U3F9TV/view?usp=sharing).
+We make pre-evaluated data avaiable to download [here](https://drive.google.com/file/d/11cj8PWcVw0HWeka1Ny79Dp7Qf2OWkpV5/view?usp=sharing).
 
 ### Experiments
 
