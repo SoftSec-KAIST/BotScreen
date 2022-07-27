@@ -25,25 +25,25 @@ FN = 0
 for game in sorted(glob('data_processed/*/*')):
     print(f'processing {game} ...')
     f_cheat = f'{game}/cheater'
-    with open(f_cheat, 'r') as f:
+    with open(f_cheat, 'r', encoding="utf-8") as f:
         rows = f.readlines()
         cheater = [int(c[0]) for c in rows] if len(rows) else []
 
     f_player = f'{game}/player_id'
-    with open(f_player, 'r') as f:
+    with open(f_player, 'r', encoding="utf-8") as f:
         rows = f.readlines()
         player_id = [int(c[0]) for c in rows]
 
     pd_lst = {}
     for pid in player_id:
         pid_player = f'{game}/obs_{pid}/log_player_{pid}.csv'
-        pd_read = pd.read_csv(pid_player)
+        pd_read = pd.read_csv(pid_player, encoding='utf8')
         pd_lst[pid] = pd_read
 
-    detect_cheater = set()
+    detect_cheater = dict()
 
     log_event = f'{game}/obs_0/log_event_processed.csv'
-    log_event = pd.read_csv(log_event)
+    log_event = pd.read_csv(log_event, encoding='utf8')
     kill = log_event['event'] == 'hit'
     kill_event = log_event[kill]
     for c, d in kill_event.iterrows():
@@ -72,20 +72,20 @@ for game in sorted(glob('data_processed/*/*')):
                 vel = angle(bef_aim, aim_vec) / math.pi * 180
 
             if bef_agl is not None and vel > 15.0:
-                detect_cheater.add(src_n)
+                detect_cheater[src_n] = detect_cheater.get(src_n, 0) + 1
                 break
 
             bef_agl = agl
             bef_aim = aim_vec
 
     for p in player_id:
-        if p in cheater and p in detect_cheater:
+        if p in cheater and detect_cheater.get(p, 0) >= 5:
             TP += 1
-        elif p not in cheater and p not in detect_cheater:
+        elif p not in cheater and detect_cheater.get(p, 0) < 5:
             TN += 1
-        elif p in cheater and p not in detect_cheater:
+        elif p in cheater and detect_cheater.get(p, 0) < 5:
             FN += 1
-        elif p not in cheater and p in detect_cheater:
+        elif p not in cheater and detect_cheater.get(p, 0) >= 5:
             FP += 1
 
 # performance measures
