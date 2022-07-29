@@ -56,20 +56,21 @@ The following table summarizes experiments and corresponding results in the pape
 
 | exp_name | summary | outputs | section |
 | - | - | - | - |
-| `experiments/exp_bench` | Aimbot prediction performance | [`bench.tsv`](./bench/bench.tsv) | 6.2 |
-| `experiments/exp_roc` | Plot ROC curves | [Figure 4](./figures/fig_04_roc.pdf) | 6.2 |
-| `experiments/exp_std` | Difference btw. anomaly scores | [Figure 5](./figures/fig_05_std.pdf) | 6.4 |
-| `experiments/stats_obs` | Stats of obs. rate (required before exp_obs) | [`data_loss/`](./data_loss) | 6.4 |
-| `experiments/exp_obs` | Effect of obs. rate to accuracy | [Figure 6](./figures/fig_06_obsrate.pdf) | 6.4 |
-| `experiments/exp_atk` | Effect of dishonest players | [Figure 7](./figures/fig_07_atk.pdf), [`bench_atk.tsv`](./bench/bench_atk.tsv) | 6.5 |
-| `comp_study/th_vara` | Pred. performance of `th_VarA` | - | 6.3 |
-| `comp_study/th_acca` | Pred. performance of `th_AccA` | - | 6.3 |
-| `comp_study/th_kill` | Pred. performance of `th_Kill` | - | 6.3 |
-| `comp_study/ks_acca` | Pred. performance of `ks_AccA` | - | 6.3 |
-| `comp_study/os_cac` | Pred. performance of `os_CAC` | - | 6.3 |
-| `comp_study/os_lac` | Pred. performance of `os_LAC` | - | 6.3 |
-| `comp_study/os_smac` | Pred. performance of `os_SMAC` | - | 6.3 |
-| `experiments/exp_cnt` | Average number of reports and FPs by each client, per game | - | 6.2 |
+| `experiments/sim_atk` | Numerical analysis | [Figure 4](./figures/fig_04_num.pdf) | V-C |
+| `experiments/exp_bench` | Aimbot prediction performance | [`bench.tsv`](./bench/bench.tsv) | VI-B |
+| `experiments/exp_roc` | Plot ROC curves | [Figure 5](./figures/fig_05_roc.pdf) | VI-B |
+| `experiments/exp_std` | Difference btw. anomaly scores | [Figure 6](./figures/fig_06_std.pdf) | VI-D |
+| `experiments/stats_obs` | Stats of obs. rate (required before exp_obs) | [`data_loss/`](./data_loss) | VI-D |
+| `experiments/exp_obs` | Effect of obs. rate to accuracy | [Figure 7](./figures/fig_07_obs.pdf) | VI-D |
+| `experiments/exp_atk` | Effect of dishonest players | [Figure 8](./figures/fig_08_atk.pdf), [`bench_atk.tsv`](./bench/bench_atk.tsv) | VI-E |
+| `comp_study/th_vara` | Pred. performance of `th_VarA` | - | VI-C |
+| `comp_study/th_acca` | Pred. performance of `th_AccA` | - | VI-C |
+| `comp_study/th_kill` | Pred. performance of `th_Kill` | - | VI-C |
+| `comp_study/ks_acca` | Pred. performance of `ks_AccA` | - | VI-C |
+| `comp_study/os_cac` | Pred. performance of `os_CAC` | - | VI-C |
+| `comp_study/os_lac` | Pred. performance of `os_LAC` | - | VI-C |
+| `comp_study/os_smac` | Pred. performance of `os_SMAC` | - | VI-C |
+| `experiments/exp_cnt` | Average number of reports and FPs by each client, per game | - | VI-C |
 
 Note that in order for `experiments/exp_obs` to properly output expected results, running `experiments/stat_obs` must be preceeded. Additionally, `.tsv` files will be saved once `save_results=True` argument is passed alongside other arguments.
 
@@ -83,10 +84,10 @@ By default, we did not include any figures, data and benchmark results. The file
 If you find the provided code useful, please cite our work.
 ```
 @inproceedings{
-    choi2022botscreen,
+    botscreen,
     title={BotScreen: Enabling Distributed and Real-Time Aimbot Detection},
     author={Minyeop Choi and Gihyuk Ko and Sang Kil Cha},
     booktitle={TBD},
-    year={2022}
+    year={TBD}
 }
 ```

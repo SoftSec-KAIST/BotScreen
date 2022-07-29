@@ -102,7 +102,7 @@ sns.boxplot(x='Target player', y='Accuracy', hue='Measure', data=res)
 plt.ylabel('')
 plt.ylim(top=1.0)
 plt.legend(loc='lower left')
-plt.savefig('figures/fig_06_obs.pdf')
+plt.savefig('figures/fig_07_obs.pdf')
 
 # calculate Pearson Correlation Coefficient
 pcc = np.corrcoef(obsrates, accs)[0,1]

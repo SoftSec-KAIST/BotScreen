@@ -89,4 +89,4 @@ ax.set(
 )
 ax.legend(loc="lower right")
 os.makedirs('figures',exist_ok=True)
-fig.savefig('figures/fig_04_roc.pdf')
+fig.savefig('figures/fig_05_roc.pdf')

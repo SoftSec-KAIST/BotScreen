@@ -105,5 +105,5 @@ for i,test_games in enumerate(e.splits):
 os.makedirs('figures',exist_ok=True)
 sns.histplot(data=stdevs, stat='percent', bins=50)
 plt.xlabel('Standard deviation of anomaly scores')
-plt.savefig('figures/fig_05_std.pdf')
+plt.savefig('figures/fig_06_std.pdf')
 print(f'Agreement: {np.mean(agree)}')
