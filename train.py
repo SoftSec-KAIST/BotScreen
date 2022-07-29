@@ -1,8 +1,6 @@
 from utils import *
 e = exp_from_arguments()        # get arguments
 
-#eprint(f'### model_dir: {e.model_dir} ###' +'\n')   # TODO: change
-
 # split experiments into k folds
 for i,test_games in enumerate(e.splits):
 

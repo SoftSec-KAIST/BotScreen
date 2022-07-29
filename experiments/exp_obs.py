@@ -88,7 +88,7 @@ for i,test_games in enumerate(e.splits):
     res['Accuracy'].extend([acc_same, acc_diff, obs_same, obs_diff])
     res['Measure'].extend(['prediction acc.', 'prediction acc.',
                            'observation rate', 'observation rate'])
-    res['Target player'].extend(['An ally', 'An opponent', 'An ally', 'An opponent'])
+    res['Target player'].extend(['An ally', 'An enemy', 'An ally', 'An enemy'])
 
     accs.extend([acc_same, acc_diff])
     obsrates.extend([obs_same, obs_diff])
