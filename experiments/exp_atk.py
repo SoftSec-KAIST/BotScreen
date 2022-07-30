@@ -101,6 +101,7 @@ res['best_prec'] = res['best_prec'].astype(float)
 
 # plot results
 sns.set_theme(style='whitegrid', palette=None)
+palette = sns.color_palette(['blue','orange','green','red'], 4)
 sns.set_context('paper')
 sns.lineplot(x='q_atk',
              y='best_prec',
@@ -108,6 +109,7 @@ sns.lineplot(x='q_atk',
              style='attacker',
              markers=True,
              dashes=False,
+             palette=palette,
              data=res)
 
 plt.legend(loc='lower left')
