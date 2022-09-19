@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16.0)
 project(Osiris)
 
 if (NOT WIN32)
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-exceptions -Wfatal-errors")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wfatal-errors")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-rtti")
 endif()
 
@@ -13,6 +13,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} --no-gnu-unique")
+endif()
+
+if (MSVC)
+  add_compile_options(/MP)
 endif()
 
 add_library(OsirisOBJ OBJECT "")

@@ -6,6 +6,7 @@
 #include <numbers>
 #include <random>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "imgui/imgui.h"
@@ -65,6 +66,7 @@ namespace Helpers
         switch (id) {
         case WeaponId::Berlin2019SouvenirToken:
         case WeaponId::Stockholm2021SouvenirToken:
+        case WeaponId::Antwerp2022SouvenirToken:
             return true;
         default:
             return false;
@@ -79,6 +81,8 @@ namespace Helpers
         case WeaponId::Berlin2019ViewerPassWith3Tokens: return WeaponId::Berlin2019BronzeCoin;
         case WeaponId::Stockholm2021ViewerPass:
         case WeaponId::Stockholm2021ViewerPassWith3Tokens: return WeaponId::Stockholm2021BronzeCoin;
+        case WeaponId::Antwerp2022ViewerPass:
+        case WeaponId::Antwerp2022ViewerPassWith3Tokens: return WeaponId::Antwerp2022BronzeCoin;
         default: return WeaponId::None;
         }
     }
@@ -87,7 +91,8 @@ namespace Helpers
     {
         switch (id) {
         case WeaponId::Berlin2019ViewerPassWith3Tokens: 
-        case WeaponId::Stockholm2021ViewerPassWith3Tokens: return 3;
+        case WeaponId::Stockholm2021ViewerPassWith3Tokens:
+        case WeaponId::Antwerp2022ViewerPassWith3Tokens: return 3;
         default: return 0;
         }
     }
@@ -102,6 +107,32 @@ namespace Helpers
 
     class RandomGenerator {
     public:
+        using GeneratorType = std::mt19937;
+        using result_type = GeneratorType::result_type;
+
+        static constexpr auto min()
+        {
+            return GeneratorType::min();
+        }
+
+        static constexpr auto max()
+        {
+            return GeneratorType::max();
+        }
+
+        auto operator()() const
+        {
+            std::scoped_lock lock{ mutex };
+            return gen();
+        }
+
+        template <typename Distribution>
+        auto operator()(Distribution&& distribution) const
+        {
+            std::scoped_lock lock{ mutex };
+            return distribution(gen);
+        }
+
         template <std::integral T>
         [[nodiscard]] static T random(T min, T max) noexcept
         {
@@ -121,8 +152,9 @@ namespace Helpers
         {
             return static_cast<T>(random(static_cast<std::underlying_type_t<T>>(min), static_cast<std::underlying_type_t<T>>(max)));
         }
+
     private:
-        inline static std::mt19937 gen{ std::random_device{}() };
+        inline static GeneratorType gen{ std::random_device{}() };
         inline static std::mutex mutex;
     };
 

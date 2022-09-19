@@ -1,0 +1,16 @@
+<EnclaveConfiguration>
+  <ProdID>0</ProdID>
+  <ISVSVN>0</ISVSVN>
+  <StackMaxSize>0x40000</StackMaxSize>
+  <HeapMaxSize>0x400000</HeapMaxSize>
+  <TCSNum>1</TCSNum>
+  <TCSPolicy>1</TCSPolicy>
+  <DisableDebug>0</DisableDebug>
+  <MiscSelect>0</MiscSelect>
+  <MiscMask>0xFFFFFFFF</MiscMask>
+  <EnableKSS>0</EnableKSS>
+  <ISVEXTPRODID_H>0</ISVEXTPRODID_H>
+  <ISVEXTPRODID_L>0</ISVEXTPRODID_L>
+  <ISVFAMILYID_H>0</ISVFAMILYID_H>
+  <ISVFAMILYID_L>0</ISVFAMILYID_L>
+</EnclaveConfiguration>

@@ -2,7 +2,7 @@
 
 #include <array>
 #include <cstdint>
-#include <memory>
+#include <optional>
 #include <type_traits>
 
 #include "SDK/Platform.h"
@@ -108,25 +108,28 @@ public:
     void(THISCALL_CONV* clearInventoryImageRGBA)(EconItemView* itemView);
     PanoramaMarshallHelper* panoramaMarshallHelper;
     std::uintptr_t setStickerToolSlotGetArgAsNumberReturnAddress;
-    std::uintptr_t setStickerToolSlotGetArgAsStringReturnAddress;
-    std::uintptr_t wearItemStickerGetArgAsNumberReturnAddress;
     std::uintptr_t wearItemStickerGetArgAsStringReturnAddress;
     std::uintptr_t setNameToolStringGetArgAsStringReturnAddress;
     std::uintptr_t clearCustomNameGetArgAsStringReturnAddress;
     std::uintptr_t deleteItemGetArgAsStringReturnAddress;
     std::uintptr_t setStatTrakSwapToolItemsGetArgAsStringReturnAddress1;
-    std::uintptr_t setStatTrakSwapToolItemsGetArgAsStringReturnAddress2;
     std::uintptr_t acknowledgeNewItemByItemIDGetArgAsStringReturnAddress;
+    std::uintptr_t setItemAttributeValueAsyncGetArgAsStringReturnAddress;
+    std::uintptr_t setMyPredictionUsingItemIdGetNumArgsReturnAddress;
+    std::uintptr_t getMyPredictionTeamIDGetArgAsStringReturnAddress;
+    std::uintptr_t setInventorySortAndFiltersGetArgAsStringReturnAddress;
+    std::uintptr_t getInventoryCountSetResultIntReturnAddress;
+    std::uintptr_t performItemCasketTransactionGetArgAsStringReturnAddress;
 
     std::add_pointer_t<EconItemView* CDECL_CONV(std::uint64_t itemID)> findOrCreateEconItemViewForItemID;
     void*(THISCALL_CONV* getInventoryItemByItemID)(CSPlayerInventory* thisptr, std::uint64_t itemID);
     std::uintptr_t useToolGetArgAsStringReturnAddress;
-    std::uintptr_t useToolGetArg2AsStringReturnAddress;
     EconItem*(THISCALL_CONV* getSOCData)(void* itemView);
     void(THISCALL_CONV* setCustomName)(EconItem* thisptr, const char* name);
     SharedObjectTypeCache<EconItem>*(THISCALL_CONV* createBaseTypeCache)(ClientSharedObjectCache<EconItem>* thisptr, int classID);
     void** uiComponentInventory;
     void(THISCALL_CONV* setItemSessionPropertyValue)(void* thisptr, std::uint64_t itemID, const char* type, const char* value);
+    void(THISCALL_CONV* removeDynamicAttribute)(EconItem* thisptr, EconItemAttributeDefinition* attribute);
 
     short makePanoramaSymbol(const char* name) const noexcept
     {
@@ -159,6 +162,8 @@ public:
     std::uintptr_t keyValuesAllocClient;
 
     std::uintptr_t jmpEbxGadgetInClient;
+
+    std::uintptr_t shouldDrawFogReturnAddress;
 #endif
 
 private:
@@ -168,4 +173,4 @@ private:
     std::uintptr_t setDynamicAttributeValueFn;
 };
 
-inline std::unique_ptr<const Memory> memory;
+inline std::optional<const Memory> memory;

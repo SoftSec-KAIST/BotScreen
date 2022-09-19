@@ -21,7 +21,7 @@
 #include "EnginePrediction.h"
 #include "Misc.h"
 
-#include "../SDK/ClassId.h"
+#include <SDK/Constants/ClassId.h>
 #include "../SDK/Client.h"
 #include "../SDK/ClientClass.h"
 #include "../SDK/ClientMode.h"
@@ -31,7 +31,7 @@
 #include "../SDK/EngineTrace.h"
 #include "../SDK/Entity.h"
 #include "../SDK/EntityList.h"
-#include "../SDK/FrameStage.h"
+#include <SDK/Constants/FrameStage.h>
 #include "../SDK/GameEvent.h"
 #include "../SDK/GlobalVars.h"
 #include "../SDK/ItemSchema.h"
@@ -728,10 +728,10 @@ void Misc::antiAfkKick(UserCmd* cmd) noexcept
         cmd->buttons |= 1 << 27;
 }
 
-void Misc::fixAnimationLOD(FrameStage stage) noexcept
+void Misc::fixAnimationLOD(csgo::FrameStage stage) noexcept
 {
 #ifdef _WIN32
-    if (miscConfig.fixAnimationLOD && stage == FrameStage::RENDER_START) {
+    if (miscConfig.fixAnimationLOD && stage == csgo::FrameStage::RENDER_START) {
         if (!localPlayer)
             return;
 
@@ -815,7 +815,7 @@ void Misc::playHitSound(GameEvent& event) noexcept
     if (const auto localUserId = localPlayer->getUserId(); event.getInt("attacker") != localUserId || event.getInt("userid") == localUserId)
         return;
 
-    constexpr std::array hitSounds{
+    static constexpr std::array hitSounds{
         "play physics/metal/metal_solid_impact_bullet2",
         "play buttons/arena_switch_press_02",
         "play training/timer_bell",
@@ -839,7 +839,7 @@ void Misc::killSound(GameEvent& event) noexcept
     if (const auto localUserId = localPlayer->getUserId(); event.getInt("attacker") != localUserId || event.getInt("userid") == localUserId)
         return;
 
-    constexpr std::array killSounds{
+    static constexpr std::array killSounds{
         "play physics/metal/metal_solid_impact_bullet2",
         "play buttons/arena_switch_press_02",
         "play training/timer_bell",
@@ -949,7 +949,7 @@ void Misc::purchaseList(GameEvent* event) noexcept
     }
 }
 
-void Misc::oppositeHandKnife(FrameStage stage) noexcept
+void Misc::oppositeHandKnife(csgo::FrameStage stage) noexcept
 {
     if (!miscConfig.oppositeHandKnife)
         return;
@@ -957,13 +957,13 @@ void Misc::oppositeHandKnife(FrameStage stage) noexcept
     if (!localPlayer)
         return;
 
-    if (stage != FrameStage::RENDER_START && stage != FrameStage::RENDER_END)
+    if (stage != csgo::FrameStage::RENDER_START && stage != csgo::FrameStage::RENDER_END)
         return;
 
     static const auto cl_righthand = interfaces->cvar->findVar("cl_righthand");
     static bool original;
 
-    if (stage == FrameStage::RENDER_START) {
+    if (stage == csgo::FrameStage::RENDER_START) {
         original = cl_righthand->getInt();
 
         if (const auto activeWeapon = localPlayer->getActiveWeapon()) {

@@ -3,12 +3,12 @@
 #include "Structs.h"
 #include "StructsFromJson.h"
 
-namespace inventory
+namespace inventory_changer::inventory
 {
 
-Glove gloveFromJson(const json& j)
+Gloves glovesFromJson(const json& j)
 {
-    Glove glove;
+    Gloves glove;
 
     if (const auto wear = j.find("Wear"); wear != j.end() && wear->is_number_float())
         glove.wear = wear->get<float>();
@@ -171,6 +171,57 @@ Skin skinFromJson(const json& j)
 
     skin.stickers = inventory::skinStickersFromJson(j);
     return skin;
+}
+
+std::array<Agent::Patch, 5> agentPatchesFromJson(const json& j)
+{
+    std::array<Agent::Patch, 5> agentPatches;
+
+    if (!j.contains("Patches"))
+        return agentPatches;
+
+    const auto& patches = j["Patches"];
+    if (!patches.is_array())
+        return agentPatches;
+
+    for (const auto& patch : patches) {
+        if (!patch.is_object())
+            continue;
+
+        if (!patch.contains("Patch ID") || !patch["Patch ID"].is_number_integer())
+            continue;
+
+        if (!patch.contains("Slot") || !patch["Slot"].is_number_integer())
+            continue;
+
+        const int patchID = patch["Patch ID"];
+        const std::size_t slot = patch["Slot"];
+
+        if (patchID != 0 && slot < agentPatches.size())
+            agentPatches[slot].patchID = patchID;
+    }
+
+    return agentPatches;
+}
+
+Agent agentFromJson(const json& j)
+{
+    Agent dynamicData;
+    dynamicData.patches = agentPatchesFromJson(j);
+    return dynamicData;
+}
+
+StorageUnit storageUnitFromJson(const json& j)
+{
+    StorageUnit storageUnit;
+
+    if (const auto modificationDateTimestamp = j.find("Modification Date Timestamp"); modificationDateTimestamp != j.end() && modificationDateTimestamp->is_number_integer())
+        storageUnit.modificationDateTimestamp = modificationDateTimestamp->get<std::uint32_t>();
+    
+    if (const auto name = j.find("Name"); name != j.end() && name->is_string())
+        storageUnit.name = name->get<std::string>();
+    
+    return storageUnit;
 }
 
 }

@@ -1,9 +1,12 @@
 #define NOMINMAX
 
+#define ENCLAVE_FILE "C:\\dump\\SGX_MDL.signed.dll"
+//#define ENCLAVE_FILE "C:\\Users\\okas832\\Desktop\\new_SGX\\Osiris-master\\Prerelease\\SGX_MDL.signed.dll"
 #define DUMP_LOG 0
 
+#include "SGX_MDL_u.h"
+#include "sgx_urts.h"
 #include "Dump.h"
-#include "DetectModel/Model.h"
 
 #include "../SDK/GameEvent.h"
 #include "../fnv.h"
@@ -42,6 +45,12 @@
 int init = 0;
 // TODO
 // When destory sockets and enclave?
+// SGX global data
+sgx_enclave_id_t eid;
+sgx_status_t ret = SGX_SUCCESS;
+sgx_launch_token_t token = { 0 };
+int updated = 0;
+int active = 1;
 
 // socket
 WSADATA wsaData = { 0 };
@@ -180,8 +189,7 @@ DWORD WINAPI RunModel(LPVOID lpParam)
             now_ipt.second.pop();
         }
 
-        // FIXME
-        process((char *)now_ipt.first.c_str(), input, output, 0x400, &out_sz);
+        process(eid, (char *)now_ipt.first.c_str(), input, output, 0x400, &out_sz);
 
         send(hSocket, output, out_sz, 0);
     }
@@ -190,11 +198,11 @@ DWORD WINAPI RunModel(LPVOID lpParam)
 
 void Dump::DumpGameData() noexcept
 {
-    if (!localPlayer)
-        return;
-
     if (!init)
     {
+        // init sgx enclave
+        sgx_create_enclave(ENCLAVE_FILE, 1, &token, &updated, &eid, NULL);
+
         // init server connection
         WSAStartup(MAKEWORD(2, 2), &wsaData);
         hSocket = socket(PF_INET, SOCK_STREAM, 0);
@@ -206,10 +214,17 @@ void Dump::DumpGameData() noexcept
 
         connect(hSocket, (SOCKADDR*)&servAddr, sizeof(servAddr));
 
+        uint8_t enc[256] = { 0, };
+        init_sgx(eid, enc);
+        send(hSocket, (const char *)enc, 256, 0);
+
         hThread = CreateThread(NULL, 0, RunModel, NULL, 0, &dwThreadId);
 
         init = 1;
     }
+
+    if (!localPlayer)
+        return;
 
 #if DUMP_LOG
     FILE* fout = fopen("c:\\dump\\log_player.csv", "a+");

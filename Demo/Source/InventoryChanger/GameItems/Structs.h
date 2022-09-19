@@ -2,9 +2,10 @@
 
 #include <string_view>
 
-#include "../../SDK/ItemSchema.h"
+#include <SDK/Constants/Tournament.h>
+#include <SDK/Constants/TournamentTeam.h>
 
-namespace game_items
+namespace inventory_changer::game_items
 {
 
 struct ItemName {
@@ -34,13 +35,13 @@ struct Patch {
 };
 
 struct StickerKit {
-    StickerKit(int id, ItemName name, std::uint32_t tournamentID, TournamentTeam tournamentTeam, int tournamentPlayerID, bool isGoldenSticker)
-        : id{ id }, name{ name }, tournamentID{ tournamentID }, tournamentTeam{ tournamentTeam }, isGoldenSticker{ isGoldenSticker }, tournamentPlayerID{ tournamentPlayerID } {}
+    StickerKit(int id, ItemName name, csgo::Tournament tournament, csgo::TournamentTeam tournamentTeam, int tournamentPlayerID, bool isGoldenSticker)
+        : id{ id }, name{ name }, tournament{ tournament }, tournamentTeam{ tournamentTeam }, isGoldenSticker{ isGoldenSticker }, tournamentPlayerID{ tournamentPlayerID } {}
 
     int id;
     ItemName name;
-    std::uint32_t tournamentID = 0;
-    TournamentTeam tournamentTeam{};
+    csgo::Tournament tournament{};
+    csgo::TournamentTeam tournamentTeam{};
     bool isGoldenSticker = false;
     int tournamentPlayerID = 0;
 };

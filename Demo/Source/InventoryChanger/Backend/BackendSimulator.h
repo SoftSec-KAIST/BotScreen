@@ -5,150 +5,160 @@
 #include <variant>
 
 #include "Item.h"
+#include "Items.h"
 #include "ItemIDMap.h"
 #include "Loadout.h"
-#include "RequestHandler.h"
-#include "Response.h"
-#include "ResponseQueue.h"
+#include "PickEm.h"
+#include "StorageUnitManager.h"
+#include "XRayScanner.h"
+#include "Request/ItemActivationHandler.h"
+#include "Request/ItemModificationHandler.h"
+#include "Request/LoadoutHandler.h"
+#include "Request/PickEmHandler.h"
+#include "Request/RequestHandler.h"
+#include "Request/StorageUnitHandler.h"
+#include "Request/XRayScannerHandler.h"
+#include "Response/Response.h"
+#include "Response/ResponseAccumulator.h"
+#include "Response/ResponseHandler.h"
+#include "Response/ResponseQueue.h"
 
-#include <InventoryChanger/StaticData.h>
+#include <InventoryChanger/GameItems/CrateLootLookup.h>
+#include <InventoryChanger/GameItems/Lookup.h>
 
 namespace inventory_changer::backend
 {
 
 class BackendSimulator {
 public:
-    explicit BackendSimulator(const game_items::Lookup& gameItemLookup) : gameItemLookup{ gameItemLookup } {}
+    explicit BackendSimulator(const game_items::Lookup& gameItemLookup, const game_items::CrateLootLookup& crateLootLookup)
+        : gameItemLookup{ gameItemLookup }, crateLootLookup{ crateLootLookup } {}
 
     [[nodiscard]] const Loadout& getLoadout() const noexcept
     {
-        return loadout;
+        return items.loadout;
+    }
+
+    [[nodiscard]] const PickEm& getPickEm() const noexcept
+    {
+        return pickEm;
     }
 
     [[nodiscard]] const ItemList& getInventory() const noexcept
     {
-        return inventory;
+        return items.inventory;
     }
 
-    void equipItemCT(ItemConstIterator itemIterator, Loadout::Slot slot)
+    [[nodiscard]] const game_items::Lookup& getGameItemLookup() const noexcept
     {
-        loadout.equipItemCT(itemIterator, slot);
-        responseQueue.add(response::ItemEquipped{ itemIterator, slot, Team::CT });
+        return gameItemLookup;
     }
 
-    void markItemEquippedCT(ItemConstIterator itemIterator, Loadout::Slot slot)
+    [[nodiscard]] const game_items::CrateLootLookup& getCrateLootLookup() const noexcept
     {
-        loadout.equipItemCT(itemIterator, slot);
+        return crateLootLookup;
     }
 
-    void equipItemTT(ItemConstIterator itemIterator, Loadout::Slot slot)
+    [[nodiscard]] const ItemIDMap& getItemIDMap() const noexcept
     {
-        loadout.equipItemTT(itemIterator, slot);
-        responseQueue.add(response::ItemEquipped{ itemIterator, slot, Team::TT });
+        return items.itemIDMap;
     }
 
-    void markItemEquippedTT(ItemConstIterator itemIterator, Loadout::Slot slot)
+    [[nodiscard]] const StorageUnitManager& getStorageUnitManager() const noexcept
     {
-        loadout.equipItemTT(itemIterator, slot);
+        return items.storageUnitManager;
     }
 
-    void equipItemNoTeam(ItemConstIterator itemIterator, Loadout::Slot slot)
+    [[nodiscard]] const XRayScanner& getXRayScanner() const noexcept
     {
-        loadout.equipItemNoTeam(itemIterator, slot);
-        responseQueue.add(response::ItemEquipped{ itemIterator, slot, Team::None });
+        return items.xRayScanner;
     }
 
-    void markItemEquippedNoTeam(ItemConstIterator itemIterator, Loadout::Slot slot)
+    [[nodiscard]] std::optional<ItemIterator> itemFromID(std::uint64_t itemID) const
     {
-        loadout.equipItemNoTeam(itemIterator, slot);
+        return items.itemIDMap.get(itemID);
     }
 
-    [[nodiscard]] static BackendSimulator& instance()
+    [[nodiscard]] std::optional<std::uint64_t> getItemID(ItemIterator it) const
     {
-        static BackendSimulator backendSimulator{ StaticData::lookup() };
-        return backendSimulator;
+        return items.itemIDMap.getItemID(it);
     }
 
-    void clearInventory()
+    [[nodiscard]] RequestHandler getRequestHandler()
     {
-        for (auto it = inventory.cbegin(); it != inventory.cend();)
-            it = removeItem(it);
+        return RequestHandler{ getItemModificationHandler(), getItemRemovalHandler(), getInventoryHandler(), getStorageUnitHandler(), items.xRayScanner, getResponseAccumulator(), items.inventory, items.loadout, gameItemLookup, crateLootLookup, ItemConstRemover{ items.inventory } };
     }
 
-    ItemConstIterator addItemUnacknowledged(inventory::Item item)
+    [[nodiscard]] PickEmHandler<ResponseAccumulator> getPickEmHandler()
     {
-        return addItem(std::move(item), true);
+        return PickEmHandler{ pickEm, getResponseAccumulator() };
     }
 
-    ItemConstIterator addItemAcknowledged(inventory::Item item)
+    [[nodiscard]] LoadoutHandler<ResponseAccumulator> getLoadoutHandler()
     {
-        return addItem(std::move(item), false);
+        return LoadoutHandler{ items.loadout, getResponseAccumulator() };
     }
 
-    ItemConstIterator removeItem(ItemConstIterator it)
+    [[nodiscard]] InventoryHandler<ResponseAccumulator> getInventoryHandler()
     {
-        const auto itemID = itemIDMap.remove(it);
-        loadout.unequipItem(it);
-        const auto newIterator = inventory.erase(it);
-        if (itemID.has_value())
-            responseQueue.add(response::ItemRemoved{ *itemID });
-        return newIterator;
+        return InventoryHandler{ items.inventory, getResponseAccumulator() };
     }
 
-    void moveToFront(ItemConstIterator it)
+    [[nodiscard]] ItemRemovalHandler<ResponseAccumulator> getItemRemovalHandler()
     {
-        inventory.splice(inventory.end(), inventory, it);
-        if (const auto itemID = getItemID(it); itemID.has_value())
-            responseQueue.add(response::ItemMovedToFront{ *itemID });
+        return ItemRemovalHandler<ResponseAccumulator>{ items };
     }
 
-    void assignItemID(ItemConstIterator it, std::uint64_t itemID)
+    [[nodiscard]] StorageUnitHandler<ResponseAccumulator> getStorageUnitHandler()
     {
-        itemIDMap.add(itemID, it);
+        return StorageUnitHandler{ items.storageUnitManager, ItemConstRemover{ items.inventory }, getInventoryHandler(), getResponseAccumulator() };
     }
 
-    void updateItemID(std::uint64_t oldItemID, std::uint64_t newItemID)
+    [[nodiscard]] XRayScannerHandler<ResponseAccumulator> getXRayScannerHandler()
     {
-        itemIDMap.update(oldItemID, newItemID);
+        return XRayScannerHandler{ gameItemLookup, crateLootLookup, items.xRayScanner, getInventoryHandler(), getItemRemovalHandler(), getResponseAccumulator(), ItemConstRemover{ items.inventory } };
     }
 
-    [[nodiscard]] std::optional<ItemConstIterator> itemFromID(std::uint64_t itemID) const
+    [[nodiscard]] ItemModificationHandler<ResponseAccumulator> getItemModificationHandler()
     {
-        return itemIDMap.get(itemID);
+        return ItemModificationHandler{ ItemConstRemover{ items.inventory }, getResponseAccumulator() };
     }
 
-    [[nodiscard]] std::optional<std::uint64_t> getItemID(ItemConstIterator it) const
+    [[nodiscard]] ItemActivationHandler<ResponseAccumulator> getItemActivationHandler()
     {
-        return itemIDMap.getItemID(it);
+        return ItemActivationHandler{ gameItemLookup, crateLootLookup, getInventoryHandler(), getItemRemovalHandler(), getResponseAccumulator() };
     }
 
-    template <typename Request, typename... Args>
-    void handleRequest(Args&&... args)
+    template <typename GameInventory>
+    void run(GameInventory& gameInventory, std::chrono::milliseconds delay)
     {
-        if (const auto response = RequestHandler{ *this, gameItemLookup, ItemConstRemover{ inventory } }(Request{ std::forward<Args>(args)... }); !isEmptyResponse(response))
-            responseQueue.add(response);
+        items.responseQueue.visit(ResponseHandler{ gameItemLookup.getStorage(), items.itemIDMap, items.storageUnitManager, gameInventory }, delay);
     }
 
-    template <typename Visitor>
-    void run(Visitor visitor, std::chrono::milliseconds delay)
+    [[nodiscard]] bool isInXRayScan() const noexcept
     {
-        responseQueue.visit(visitor, delay);
+        return items.xRayScanner.getItems().has_value();
     }
 
 private:
-    ItemConstIterator addItem(inventory::Item item, bool asUnacknowledged)
+    [[nodiscard]] ResponseAccumulator getResponseAccumulator()
     {
-        inventory.push_back(std::move(item));
-        const auto added = std::prev(inventory.end());
-        responseQueue.add(response::ItemAdded{ added, asUnacknowledged });
-        return added;
+        return ResponseAccumulator{ items.responseQueue };
     }
 
-    ItemList inventory;
-    Loadout loadout;
-    ResponseQueue<> responseQueue;
-    ItemIDMap itemIDMap;
     const game_items::Lookup& gameItemLookup;
+    const game_items::CrateLootLookup& crateLootLookup;
+    Items items;
+    PickEm pickEm;
 };
+
+inline void clearInventory(BackendSimulator& backend)
+{
+    const auto& inventory = backend.getInventory();
+    const auto itemRemovalHandler = backend.getItemRemovalHandler();
+
+    for (auto it = inventory.cbegin(); it != inventory.cend();)
+        it = itemRemovalHandler(it);
+}
 
 }

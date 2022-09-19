@@ -1,0 +1,13 @@
+enclave {
+    from "sgx_tstdc.edl" import *;
+
+    trusted {
+        public void process([user_check] char *username, [user_check] double *input, [out, size=len] char *output_buf, size_t len, [out]size_t *res_size);
+        public void init_sgx([out, size=256] uint8_t *enc);
+    };
+
+    untrusted {
+        /* define OCALLs here. */
+
+    };
+};

@@ -1,3 +1,5 @@
+#include <nlohmann/json.hpp>
+
 #include "InventoryConfig.h"
 
 #include "GameItems/Lookup.h"
@@ -7,17 +9,19 @@
 
 #include "Backend/BackendSimulator.h"
 
-#include "StaticData.h"
+#include "Backend/Response/ResponseHandler.h"
+#include "GameIntegration/Inventory.h"
 
-#include "BackendResponseHandler.h"
+#include "InventoryChanger.h"
+#include "WeaponNames.h"
 
 constexpr auto CONFIG_VERSION = 4;
 
-[[nodiscard]] json toJson(const inventory::Skin& skin)
+[[nodiscard]] json toJson(const inventory_changer::inventory::Skin& skin)
 {
     json j;
 
-    if (skin.tournamentID != 0)
+    if (skin.tournamentID != csgo::Tournament{})
         j["Tournament ID"] = skin.tournamentID;
 
     j["Wear"] = skin.wear;
@@ -36,7 +40,8 @@ constexpr auto CONFIG_VERSION = 4;
 
         json stickerConfig;
         stickerConfig["Sticker ID"] = sticker.stickerID;
-        stickerConfig["Wear"] = sticker.wear;
+        if (sticker.wear != 0.0f)
+            stickerConfig["Wear"] = sticker.wear;
         stickerConfig["Slot"] = i;
         stickers.push_back(std::move(stickerConfig));
     }
@@ -51,141 +56,24 @@ constexpr auto CONFIG_VERSION = 4;
     return j;
 }
 
-json InventoryChanger::toJson() noexcept
+[[nodiscard]] json toJson(const inventory_changer::backend::PickEm& pickEm)
 {
-    json j;
+    json picks;
 
-    j["Version"] = CONFIG_VERSION;
-
-    const auto& backend = inventory_changer::backend::BackendSimulator::instance();
-    const auto& loadout = backend.getLoadout();
-    const auto& inventory = backend.getInventory();
-    auto& items = j["Items"];
-    for (auto itemIt = inventory.begin(); itemIt != inventory.end(); ++itemIt) {
-        json itemConfig;
-
-        if (const auto slotCT = loadout.getItemEquippedSlotCT(itemIt); slotCT.has_value()) {
-            itemConfig["Equipped Slot"] = *slotCT;
-            itemConfig["Equipped"].push_back("CT");
-        }
-        if (const auto slotTT = loadout.getItemEquippedSlotTT(itemIt); slotTT.has_value()) {
-            itemConfig["Equipped Slot"] = *slotTT;
-            itemConfig["Equipped"].push_back("TT");
-        }
-        if (const auto slotNoTeam = loadout.getItemEquippedSlotNoTeam(itemIt); slotNoTeam.has_value()) {
-            itemConfig["Equipped Slot"] = *slotNoTeam;
-            itemConfig["Equipped"].push_back("NOTEAM");
-        }
-
-        const auto& item = *itemIt;
-        const auto& gameItem = item.gameItem();
-        itemConfig["Weapon ID"] = gameItem.getWeaponID();
-        itemConfig["Item Name"] = StaticData::getWeaponName(gameItem.getWeaponID());
-
-        if (gameItem.isSticker()) {
-            itemConfig["Sticker ID"] = StaticData::lookup().getStorage().getStickerKit(gameItem).id;
-        } else if (gameItem.isGloves()) {
-            const auto& staticData = StaticData::lookup().getStorage().getPaintKit(gameItem);
-            itemConfig["Paint Kit"] = staticData.id;
-            itemConfig["Paint Kit Name"] = staticData.name.forDisplay;
-
-            if (const auto glove = item.get<inventory::Glove>()) {
-                itemConfig["Wear"] = glove->wear;
-                itemConfig["Seed"] = glove->seed;
-            }
-        } else if (gameItem.isSkin()) {
-            const auto& staticData = StaticData::lookup().getStorage().getPaintKit(gameItem);
-            itemConfig["Paint Kit"] = staticData.id;
-            itemConfig["Paint Kit Name"] = staticData.name.forDisplay;
-
-            if (const auto skin = item.get<inventory::Skin>())
-                itemConfig.update(::toJson(*skin));
-
-        } else if (gameItem.isMusic()) {
-            itemConfig["Music ID"] = StaticData::lookup().getStorage().getMusicKit(gameItem).id;
-            if (const auto music = item.get<inventory::Music>(); music && music->statTrak > -1)
-                itemConfig["StatTrak"] = music->statTrak;
-        } else if (gameItem.isPatch()) {
-            itemConfig["Patch ID"] = StaticData::lookup().getStorage().getPatch(gameItem).id;
-        } else if (gameItem.isGraffiti()) {
-            itemConfig["Graffiti ID"] = StaticData::lookup().getStorage().getGraffitiKit(gameItem).id;
-            if (const auto graffiti = item.get<inventory::Graffiti>(); graffiti && graffiti->usesLeft >= 0) {
-                itemConfig["Uses Left"] = graffiti->usesLeft;
-                itemConfig["Item Name"] = StaticData::getWeaponName(WeaponId::Graffiti);
-            }
-        } else if (gameItem.isAgent()) {
-            if (const auto agent = item.get<inventory::Agent>()) {
-                auto& stickers = itemConfig["Patches"];
-                for (std::size_t i = 0; i < agent->patches.size(); ++i) {
-                    const auto& patch = agent->patches[i];
-                    if (patch.patchID == 0)
-                        continue;
-
-                    json patchConfig;
-                    patchConfig["Patch ID"] = patch.patchID;
-                    patchConfig["Slot"] = i;
-                    stickers.push_back(std::move(patchConfig));
-                }
-            }
-        } else if (gameItem.isServiceMedal()) {
-            if (const auto serviceMedal = item.get<inventory::ServiceMedal>(); serviceMedal && serviceMedal->issueDateTimestamp != 0)
-                itemConfig["Issue Date Timestamp"] = serviceMedal->issueDateTimestamp;
-        } else if (gameItem.isCase()) {
-            if (StaticData::isSouvenirPackage(gameItem)) {
-                if (const auto souvenirPackage = item.get<inventory::SouvenirPackage>(); souvenirPackage && souvenirPackage->tournamentStage != TournamentStage{}) {
-                    itemConfig["Tournament Stage"] = souvenirPackage->tournamentStage;
-                    itemConfig["Tournament Team 1"] = souvenirPackage->tournamentTeam1;
-                    itemConfig["Tournament Team 2"] = souvenirPackage->tournamentTeam2;
-                    itemConfig["Tournament Player"] = souvenirPackage->proPlayer;
-                }
-            }
-        }
-
-        items.push_back(std::move(itemConfig));
+    for (const auto& [position, pick] : pickEm.getPicks()) {
+        picks.push_back(json{ { "Tournament", position.tournament },
+                              { "Group", position.group },
+                              { "Index", position.indexInGroup },
+                              { "Team", pick } });
     }
 
-    return j;
+    return json{ { "Picks", std::move(picks) } };
 }
 
-[[nodiscard]] auto loadAgentPatchesFromJson(const json& j) noexcept
+namespace inventory_changer
 {
-    std::array<inventory::Agent::Patch, 5> agentPatches;
 
-    if (!j.contains("Patches"))
-        return agentPatches;
-
-    const auto& patches = j["Patches"];
-    if (!patches.is_array())
-        return agentPatches;
-
-    for (const auto& patch : patches) {
-        if (!patch.is_object())
-            continue;
-
-        if (!patch.contains("Patch ID") || !patch["Patch ID"].is_number_integer())
-            continue;
-
-        if (!patch.contains("Slot") || !patch["Slot"].is_number_integer())
-            continue;
-
-        const int patchID = patch["Patch ID"];
-        const std::size_t slot = patch["Slot"];
-
-        if (patchID != 0 && slot < agentPatches.size())
-            agentPatches[slot].patchID = patchID;
-    }
-
-    return agentPatches;
-}
-
-[[nodiscard]] inventory::Agent loadDynamicAgentDataFromJson(const json& j) noexcept
-{
-    inventory::Agent dynamicData;
-    dynamicData.patches = loadAgentPatchesFromJson(j);
-    return dynamicData;
-}
-
-[[nodiscard]] game_items::Lookup::OptionalItemReference gameItemFromJson(const game_items::Lookup& lookup, const json& j)
+[[nodiscard]] const game_items::Item* gameItemFromJson(const game_items::Lookup& lookup, const json& j)
 {
     if (const auto stickerID = j.find("Sticker ID"); stickerID != j.end() && stickerID->is_number_integer())
         return lookup.findSticker(stickerID->get<int>());
@@ -206,23 +94,27 @@ json InventoryChanger::toJson() noexcept
     return lookup.findItem(weaponID->get<WeaponId>());
 }
 
-[[nodiscard]] inventory::ItemData itemFromJson(const game_items::Item& gameItem, const json& j)
+[[nodiscard]] inventory::Item::VariantProperties itemFromJson(const game_items::Storage& gameItemStorage, const game_items::Item& gameItem, const json& j)
 {
     if (gameItem.isSkin())
         return inventory::skinFromJson(j);
     if (gameItem.isGloves())
-        return inventory::gloveFromJson(j);
+        return inventory::glovesFromJson(j);
     if (gameItem.isMusic())
         return inventory::musicFromJson(j);
     if (gameItem.isAgent())
-        return loadDynamicAgentDataFromJson(j);
+        return inventory::agentFromJson(j);
     if (gameItem.isServiceMedal())
         return inventory::serviceMedalFromJson(j);
-    if (gameItem.isCase() && StaticData::isSouvenirPackage(gameItem))
+    if (gameItem.isCrate() && gameItemStorage.isSouvenirPackage(gameItem))
         return inventory::souvenirPackageFromJson(j);
     if (gameItem.isGraffiti())
         return inventory::graffitiFromJson(j);
+    if (gameItem.isStorageUnit())
+        return inventory::storageUnitFromJson(j);
     return {};
+}
+
 }
 
 struct EquippedState {
@@ -260,8 +152,246 @@ struct EquippedState {
     return static_cast<std::uint8_t>(-1);
 }
 
-void InventoryChanger::fromJson(const json& j) noexcept
+[[nodiscard]] std::optional<inventory_changer::backend::PickEm::PickPosition> pickPositionFromJson(const json& j)
 {
+    const auto tournament = j.find("Tournament");
+    if (tournament == j.end() || !tournament->is_number_unsigned())
+        return {};
+
+    const auto group = j.find("Group");
+    if (group == j.end() || !group->is_number_unsigned())
+        return {};
+
+    const auto indexInGroup = j.find("Index");
+    if (indexInGroup == j.end() || !indexInGroup->is_number_unsigned())
+        return {};
+
+    return inventory_changer::backend::PickEm::PickPosition{ static_cast<csgo::Tournament>(tournament->get<std::uint8_t>()), group->get<std::uint16_t>(), indexInGroup->get<std::uint8_t>() };
+}
+
+[[nodiscard]] csgo::TournamentTeam pickTeamFromJson(const json& j)
+{
+    if (const auto team = j.find("Team"); team != j.end() && team->is_number_unsigned())
+        return team->get<csgo::TournamentTeam>();
+    return csgo::TournamentTeam::None;
+}
+
+void pickEmFromJson(const json& j, inventory_changer::backend::BackendSimulator& backend)
+{
+    const auto pickEm = j.find("Pick'Em");
+    if (pickEm == j.end() || !pickEm->is_object())
+        return;
+
+    const auto picks = pickEm->find("Picks");
+    if (picks == pickEm->end() || !picks->is_array())
+        return;
+
+    for (const auto& pick : *picks) {
+        const auto position = pickPositionFromJson(pick);
+        if (!position.has_value())
+            continue;
+
+        const auto team = pickTeamFromJson(pick);
+        if (team == csgo::TournamentTeam::None)
+            continue;
+
+        backend.getPickEmHandler().pickSticker(*position, team);
+    }
+
+}
+
+[[nodiscard]] bool isInXRayScanner(const inventory_changer::backend::XRayScanner& xrayScanner, inventory_changer::backend::ItemIterator item) noexcept
+{
+    const auto items = xrayScanner.getItems();
+    return items.has_value() && (items->crate == item || items->reward == item);
+}
+
+namespace inventory_changer
+{
+
+void stickerToJson(const game_items::Item& sticker, const game_items::Storage& gameItemStorage, json& j)
+{
+    j["Sticker ID"] = gameItemStorage.getStickerKit(sticker).id;
+}
+
+void glovesToJson(const inventory::Item& gloves, const game_items::Storage& gameItemStorage, json& j)
+{
+    const auto& paintKit = gameItemStorage.getPaintKit(gloves.gameItem());
+    j["Paint Kit"] = paintKit.id;
+    j["Paint Kit Name"] = paintKit.name.forDisplay;
+
+    if (const auto glove = get<inventory::Gloves>(gloves)) {
+        j["Wear"] = glove->wear;
+        j["Seed"] = glove->seed;
+    }
+}
+
+void musicToJson(const inventory::Item& item, const game_items::Storage& gameItemStorage, json& j)
+{
+    j["Music ID"] = gameItemStorage.getMusicKit(item.gameItem()).id;
+    if (const auto music = get<inventory::Music>(item); music && music->statTrak > -1)
+        j["StatTrak"] = music->statTrak;
+}
+
+void agentToJson(const inventory::Item& item, json& j)
+{
+    const auto agent = get<inventory::Agent>(item);
+    if (!agent)
+        return;
+
+    auto& stickers = j["Patches"];
+    for (std::size_t i = 0; i < agent->patches.size(); ++i) {
+        const auto& patch = agent->patches[i];
+        if (patch.patchID == 0)
+            continue;
+
+        json patchConfig;
+        patchConfig["Patch ID"] = patch.patchID;
+        patchConfig["Slot"] = i;
+        stickers.push_back(std::move(patchConfig));
+    }
+}
+
+void storageUnitToJson(const inventory::Item& item, json& j)
+{
+    if (const auto storageUnit = get<inventory::StorageUnit>(item); storageUnit && storageUnit->modificationDateTimestamp != 0) {
+        j["Modification Date Timestamp"] = storageUnit->modificationDateTimestamp;
+        j["Name"] = storageUnit->name;
+    }
+}
+
+void commonPropertiesToJson(const inventory::Item::CommonProperties& properties, json& j)
+{
+    if (properties.tradableAfterDate != 0)
+        j.emplace("Tradable After Date", properties.tradableAfterDate);
+}
+
+[[nodiscard]] json itemsToJson(const backend::BackendSimulator& backend)
+{
+    const auto& gameItemStorage = backend.getGameItemLookup().getStorage();
+    const auto& loadout = backend.getLoadout();
+    const auto& inventory = backend.getInventory();
+    const auto& storageUnitIDs = backend.getStorageUnitManager().getStorageUnitIDs();
+    const auto& xrayScanner = backend.getXRayScanner();
+
+    json items;
+    for (auto itemIt = inventory.begin(); itemIt != inventory.end(); ++itemIt) {
+        if (isInXRayScanner(xrayScanner, itemIt))
+            continue;
+
+        json itemConfig;
+
+        if (const auto slotCT = loadout.getItemEquippedSlotCT(itemIt); slotCT.has_value()) {
+            itemConfig["Equipped Slot"] = *slotCT;
+            itemConfig["Equipped"].push_back("CT");
+        }
+        if (const auto slotTT = loadout.getItemEquippedSlotTT(itemIt); slotTT.has_value()) {
+            itemConfig["Equipped Slot"] = *slotTT;
+            itemConfig["Equipped"].push_back("TT");
+        }
+        if (const auto slotNoTeam = loadout.getItemEquippedSlotNoTeam(itemIt); slotNoTeam.has_value()) {
+            itemConfig["Equipped Slot"] = *slotNoTeam;
+            itemConfig["Equipped"].push_back("NOTEAM");
+        }
+
+        const auto& item = *itemIt;
+        const auto& gameItem = item.gameItem();
+        itemConfig["Weapon ID"] = gameItem.getWeaponID();
+        itemConfig["Item Name"] = WeaponNames::instance().getWeaponName(gameItem.getWeaponID());
+
+        commonPropertiesToJson(item.getProperties().common, itemConfig);
+
+        if (gameItem.isSticker()) {
+            stickerToJson(gameItem, gameItemStorage, itemConfig);
+        } else if (gameItem.isGloves()) {
+            glovesToJson(item, gameItemStorage, itemConfig);
+        } else if (gameItem.isSkin()) {
+            const auto& staticData = gameItemStorage.getPaintKit(gameItem);
+            itemConfig["Paint Kit"] = staticData.id;
+            itemConfig["Paint Kit Name"] = staticData.name.forDisplay;
+
+            if (const auto skin = get<inventory::Skin>(item))
+                itemConfig.update(::toJson(*skin));
+
+        } else if (gameItem.isMusic()) {
+            musicToJson(item, gameItemStorage, itemConfig);
+        } else if (gameItem.isPatch()) {
+            itemConfig["Patch ID"] = gameItemStorage.getPatch(gameItem).id;
+        } else if (gameItem.isGraffiti()) {
+            itemConfig["Graffiti ID"] = gameItemStorage.getGraffitiKit(gameItem).id;
+            if (const auto graffiti = get<inventory::Graffiti>(item); graffiti && graffiti->usesLeft >= 0) {
+                itemConfig["Uses Left"] = graffiti->usesLeft;
+                itemConfig["Item Name"] = WeaponNames::instance().getWeaponName(WeaponId::Graffiti);
+            }
+        } else if (gameItem.isAgent()) {
+            agentToJson(item, itemConfig);
+        } else if (gameItem.isServiceMedal()) {
+            if (const auto serviceMedal = get<inventory::ServiceMedal>(item); serviceMedal && serviceMedal->issueDateTimestamp != 0)
+                itemConfig["Issue Date Timestamp"] = serviceMedal->issueDateTimestamp;
+        } else if (gameItem.isCrate()) {
+            if (const auto souvenirPackage = get<inventory::SouvenirPackage>(item); souvenirPackage && souvenirPackage->tournamentStage != TournamentStage{}) {
+                itemConfig["Tournament Stage"] = souvenirPackage->tournamentStage;
+                itemConfig["Tournament Team 1"] = souvenirPackage->tournamentTeam1;
+                itemConfig["Tournament Team 2"] = souvenirPackage->tournamentTeam2;
+                itemConfig["Tournament Player"] = souvenirPackage->proPlayer;
+            }
+        } else if (gameItem.isStorageUnit()) {
+            storageUnitToJson(item, itemConfig);
+        }
+
+        if (const auto storageUnitID = storageUnitIDs.find(itemIt); storageUnitID != storageUnitIDs.end())
+            itemConfig["Storage Unit ID"] = storageUnitID->second;
+
+        items.push_back(std::move(itemConfig));
+    }
+
+    return items;
+}
+
+}
+
+json inventory_changer::toJson(const InventoryChanger& inventoryChanger)
+{
+    json j;
+
+    j["Version"] = CONFIG_VERSION;
+
+    const auto& backend = inventoryChanger.getBackend();
+
+    j.emplace("Items", itemsToJson(backend));
+    j.emplace("Pick'Em", ::toJson(backend.getPickEm()));
+    return j;
+}
+
+std::optional<std::uint32_t> storageUnitIdFromJson(const json& j)
+{
+    if (const auto it = j.find("Storage Unit ID"); it != j.end() && it->is_number_unsigned())
+        return it->get<std::uint32_t>();
+    return {};
+}
+
+namespace inventory_changer
+{
+
+[[nodiscard]] inventory::Item::CommonProperties commonPropertiesFromJson(const json& j)
+{
+    inventory::Item::CommonProperties properties;
+
+    if (const auto it = j.find("Tradable After Date"); it != j.end() && it->is_number_unsigned())
+        properties.tradableAfterDate = it->get<std::uint32_t>();
+
+    return properties;
+}
+
+}
+
+void inventory_changer::fromJson(const json& j, InventoryChanger& inventoryChanger)
+{
+    auto& backend = inventoryChanger.getBackend();
+    const auto& lookup = backend.getGameItemLookup();
+
+    pickEmFromJson(j, backend);
+
     if (!j.contains("Items"))
         return;
 
@@ -269,31 +399,39 @@ void InventoryChanger::fromJson(const json& j) noexcept
     if (!items.is_array())
         return;
 
-    auto& backend = inventory_changer::backend::BackendSimulator::instance();
+    std::unordered_map<std::uint32_t, inventory_changer::backend::ItemIterator> storageUnits;
+    std::vector<std::pair<inventory_changer::backend::ItemIterator, std::uint32_t>> itemsToBindToStorageUnits;
+
     for (const auto& jsonItem : items) {
-        std::optional<std::reference_wrapper<const game_items::Item>> itemOptional = gameItemFromJson(StaticData::lookup(), jsonItem);
-        if (!itemOptional.has_value())
+        const auto item = gameItemFromJson(lookup, jsonItem);
+        if (!item)
             continue;
 
-        const game_items::Item& item = itemOptional->get();
-        const auto itemAdded = backend.addItemAcknowledged(inventory::Item{ item, itemFromJson(item, jsonItem) });
+        const auto itemAdded = backend.getInventoryHandler().addItem(inventory::Item{ *item, { commonPropertiesFromJson(jsonItem), itemFromJson(lookup.getStorage(), *item, jsonItem) } }, false);
+
+        if (const auto storageUnitID = storageUnitIdFromJson(jsonItem); storageUnitID.has_value()) {
+            if (!item->isStorageUnit()) {
+                itemsToBindToStorageUnits.emplace_back(itemAdded, *storageUnitID);
+            } else {
+                storageUnits.emplace(*storageUnitID, itemAdded);
+            }
+        }
 
         if (const auto equippedSlot = equippedSlotFromJson(jsonItem); equippedSlot != static_cast<std::uint8_t>(-1)) {
             const auto equippedState = equippedFromJson(jsonItem);
             if (equippedState.ct)
-                backend.equipItemCT(itemAdded, equippedSlot);
+                backend.getLoadoutHandler().equipItem(itemAdded, equippedSlot, csgo::Team::CT);
             if (equippedState.tt)
-                backend.equipItemTT(itemAdded, equippedSlot);
+                backend.getLoadoutHandler().equipItem(itemAdded, equippedSlot, csgo::Team::TT);
             if (equippedState.noTeam)
-                backend.equipItemNoTeam(itemAdded, equippedSlot);
+                backend.getLoadoutHandler().equipItem(itemAdded, equippedSlot, csgo::Team::None);
         }
-        
-    }
-}
 
-void InventoryChanger::resetConfig() noexcept
-{
-    auto& backend = inventory_changer::backend::BackendSimulator::instance();
-    backend.clearInventory();
-    backend.run(inventory_changer::BackendResponseHandler{ backend }, std::chrono::milliseconds{ 0 });
+    }
+
+    for (auto [item, storageUnitID] : itemsToBindToStorageUnits) {
+        if (const auto storageUnit = storageUnits.find(storageUnitID); storageUnit != storageUnits.end()) {
+            backend.getStorageUnitHandler().bindItemToStorageUnit(item, storageUnit->second);
+        }
+    }
 }

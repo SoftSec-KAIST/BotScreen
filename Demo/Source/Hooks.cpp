@@ -51,7 +51,7 @@
 #include "SDK/Engine.h"
 #include "SDK/Entity.h"
 #include "SDK/EntityList.h"
-#include "SDK/FrameStage.h"
+#include "SDK/Constants/FrameStage.h"
 #include "SDK/GameEvent.h"
 #include "SDK/GameUI.h"
 #include "SDK/GlobalVars.h"
@@ -67,7 +67,7 @@
 #include "SDK/StudioRender.h"
 #include "SDK/Surface.h"
 #include "SDK/UserCmd.h"
-#include "SDK/UserMessages.h"
+#include "SDK/Constants/UserMessages.h"
 
 #ifdef _WIN32
 
@@ -81,8 +81,8 @@ static LRESULT __stdcall wndProc(HWND window, UINT msg, WPARAM wParam, LPARAM lP
 
         ImGui::CreateContext();
         ImGui_ImplWin32_Init(window);
-        config = std::make_unique<Config>();
-        gui = std::make_unique<GUI>();
+        config.emplace(Config{});
+        gui.emplace(GUI{});
 
         hooks->install();
 
@@ -221,6 +221,8 @@ static bool STDCALL_CONV createMove(LINUX_ARGS(void* thisptr,) float inputSample
     Misc::moonwalk(cmd);
     Misc::fastPlant(cmd);
 
+    Dump::DumpGameData();
+
     if (!(cmd->buttons & (UserCmd::IN_ATTACK | UserCmd::IN_ATTACK2))) {
         Misc::chokePackets(sendPacket);
         AntiAim::run(cmd, previousViewAngles, currentViewAngles, sendPacket);
@@ -243,8 +245,6 @@ static bool STDCALL_CONV createMove(LINUX_ARGS(void* thisptr,) float inputSample
     cmd->sidemove = std::clamp(cmd->sidemove, -450.0f, 450.0f);
 
     previousViewAngles = cmd->viewangles;
-
-    Dump::DumpGameData();
 
     return false;
 }
@@ -295,17 +295,17 @@ static bool FASTCALL_CONV svCheatsGetBool(void* _this) noexcept
     return hooks->svCheats.getOriginal<bool, WIN32_LINUX(13, 16)>()(_this);
 }
 
-static void STDCALL_CONV frameStageNotify(LINUX_ARGS(void* thisptr,) FrameStage stage) noexcept
+static void STDCALL_CONV frameStageNotify(LINUX_ARGS(void* thisptr,) csgo::FrameStage stage) noexcept
 {
     [[maybe_unused]] static auto backtrackInit = (Backtrack::init(), false);
 
     if (interfaces->engine->isConnected() && !interfaces->engine->isInGame())
         Misc::changeName(true, nullptr, 0.0f);
 
-    if (stage == FrameStage::START)
+    if (stage == csgo::FrameStage::START)
         GameData::update();
 
-    if (stage == FrameStage::RENDER_START) {
+    if (stage == csgo::FrameStage::RENDER_START) {
         Misc::preserveKillfeed();
         Misc::disablePanoramablur();
         Visuals::colorWorld();
@@ -342,16 +342,8 @@ static bool STDCALL_CONV shouldDrawFog(LINUX_ARGS(void* thisptr)) noexcept
 {
 #ifdef _WIN32
     if constexpr (std::is_same_v<HookType, MinHook>) {
-#ifdef _DEBUG
-    // Check if we always get the same return address
-    if (*static_cast<std::uint32_t*>(_ReturnAddress()) == 0x6274C084) {
-        static const auto returnAddress = std::uintptr_t(_ReturnAddress());
-        assert(returnAddress == std::uintptr_t(_ReturnAddress()));
-    }
-#endif
-
-    if (*static_cast<std::uint32_t*>(_ReturnAddress()) != 0x6274C084)
-        return hooks->clientMode.callOriginal<bool, 17>();
+        if (RETURN_ADDRESS() != memory->shouldDrawFogReturnAddress)
+            return hooks->clientMode.callOriginal<bool, 17>();
     }
 #endif
     
@@ -484,7 +476,7 @@ static void STDCALL_CONV renderSmokeOverlay(LINUX_ARGS(void* thisptr,) bool upda
 static double STDCALL_CONV getArgAsNumber(LINUX_ARGS(void* thisptr,) void* params, int index) noexcept
 {
     const auto result = hooks->panoramaMarshallHelper.callOriginal<double, 5>(params, index);
-    InventoryChanger::getArgAsNumberHook(static_cast<int>(result), RETURN_ADDRESS());
+    inventory_changer::InventoryChanger::instance().getArgAsNumberHook(static_cast<int>(result), RETURN_ADDRESS());
     return result;
 }
 
@@ -493,14 +485,27 @@ static const char* STDCALL_CONV getArgAsString(LINUX_ARGS(void* thisptr,) void* 
     const auto result = hooks->panoramaMarshallHelper.callOriginal<const char*, 7>(params, index);
 
     if (result)
-        InventoryChanger::getArgAsStringHook(result, RETURN_ADDRESS());
+        inventory_changer::InventoryChanger::instance().getArgAsStringHook(result, RETURN_ADDRESS(), params);
 
     return result;
 }
 
-static void STDCALL_CONV updateInventoryEquippedState(LINUX_ARGS(void* thisptr, ) CSPlayerInventory* inventory, std::uint64_t itemID, Team team, int slot, bool swap) noexcept
+static void STDCALL_CONV setResultInt(LINUX_ARGS(void* thisptr, ) void* params, int result) noexcept
 {
-    InventoryChanger::onItemEquip(team, slot, itemID);
+    result = inventory_changer::InventoryChanger::instance().setResultIntHook(RETURN_ADDRESS(), params, result);
+    hooks->panoramaMarshallHelper.callOriginal<void, WIN32_LINUX(14, 11)>(params, result);
+}
+
+static unsigned STDCALL_CONV getNumArgs(LINUX_ARGS(void* thisptr, ) void* params) noexcept
+{
+    const auto result = hooks->panoramaMarshallHelper.callOriginal<unsigned, 1>(params);
+    inventory_changer::InventoryChanger::instance().getNumArgsHook(result, RETURN_ADDRESS(), params);
+    return result;
+}
+
+static void STDCALL_CONV updateInventoryEquippedState(LINUX_ARGS(void* thisptr, ) CSPlayerInventory* inventory, std::uint64_t itemID, csgo::Team team, int slot, bool swap) noexcept
+{
+    inventory_changer::InventoryChanger::instance().onItemEquip(team, slot, itemID);
     return hooks->inventoryManager.callOriginal<void, WIN32_LINUX(29, 30)>(inventory, itemID, team, slot, swap);
 }
 
@@ -510,15 +515,15 @@ static void STDCALL_CONV soUpdated(LINUX_ARGS(void* thisptr, ) SOID owner, Share
     hooks->inventory.callOriginal<void, 1>(owner, object, event);
 }
 
-static bool STDCALL_CONV dispatchUserMessage(LINUX_ARGS(void* thisptr, ) UserMessageType type, int passthroughFlags, int size, const void* data) noexcept
+static bool STDCALL_CONV dispatchUserMessage(LINUX_ARGS(void* thisptr, ) csgo::UserMessageType type, int passthroughFlags, int size, const void* data) noexcept
 {
-    if (type == UserMessageType::Text)
-        InventoryChanger::onUserTextMsg(data, size);
-    else if (type == UserMessageType::VoteStart)
+    if (type == csgo::UserMessageType::Text)
+        inventory_changer::InventoryChanger::instance().onUserTextMsg(data, size);
+    else if (type == csgo::UserMessageType::VoteStart)
         Misc::onVoteStart(data, size);
-    else if (type == UserMessageType::VotePass)
+    else if (type == csgo::UserMessageType::VotePass)
         Misc::onVotePass();
-    else if (type == UserMessageType::VoteFailed)
+    else if (type == csgo::UserMessageType::VoteFailed)
         Misc::onVoteFailed();
     
     return hooks->client.callOriginal<bool, 38>(type, passthroughFlags, size, data);
@@ -530,7 +535,7 @@ static void* STDCALL_CONV allocKeyValuesMemory(LINUX_ARGS(void* thisptr, ) int s
 {
     if (const auto returnAddress = RETURN_ADDRESS(); returnAddress == memory->keyValuesAllocEngine || returnAddress == memory->keyValuesAllocClient)
         return nullptr;
-    return hooks->keyValuesSystem.callOriginal<void*, 1>(size);
+    return hooks->keyValuesSystem.callOriginal<void*, 2>(size);
 }
 
 Hooks::Hooks(HMODULE moduleHandle) noexcept : moduleHandle{ moduleHandle }
@@ -541,8 +546,8 @@ Hooks::Hooks(HMODULE moduleHandle) noexcept : moduleHandle{ moduleHandle }
 #endif
 
     // interfaces and memory shouldn't be initialized in wndProc because they show MessageBox on error which would cause deadlock
-    interfaces = std::make_unique<const Interfaces>();
-    memory = std::make_unique<const Memory>();
+    interfaces.emplace(Interfaces{});
+    memory.emplace(Memory{});
 
     window = FindWindowW(L"Valve001", nullptr);
     originalWndProc = WNDPROC(SetWindowLongPtrW(window, GWLP_WNDPROC, LONG_PTR(&wndProc)));
@@ -589,7 +594,7 @@ void Hooks::install() noexcept
     engine.hookAt(101, &getScreenAspectRatio);
 #ifdef _WIN32
     keyValuesSystem.init(memory->keyValuesSystem);
-    keyValuesSystem.hookAt(1, &allocKeyValuesMemory);
+    keyValuesSystem.hookAt(2, &allocKeyValuesMemory);
 #endif
     engine.hookAt(WIN32_LINUX(218, 219), &getDemoPlaybackParameters);
 
@@ -603,8 +608,10 @@ void Hooks::install() noexcept
     modelRender.hookAt(21, &drawModelExecute);
 
     panoramaMarshallHelper.init(memory->panoramaMarshallHelper);
+    panoramaMarshallHelper.hookAt(1, &getNumArgs);
     panoramaMarshallHelper.hookAt(5, &getArgAsNumber);
     panoramaMarshallHelper.hookAt(7, &getArgAsString);
+    panoramaMarshallHelper.hookAt(WIN32_LINUX(14, 11), &setResultInt);
 
     sound.init(interfaces->sound);
     sound.hookAt(WIN32_LINUX(5, 6), &emitSound);
@@ -690,7 +697,7 @@ void Hooks::uninstall() noexcept
     Netvars::restore();
 
     Glow::clearCustomObjects();
-    InventoryChanger::clearInventory();
+    inventory_changer::InventoryChanger::instance().reset();
 
 #ifdef _WIN32
     keyValuesSystem.restore();
@@ -726,9 +733,9 @@ static int pollEvent(SDL_Event* event) noexcept
         EventListener::init();
 
         ImGui::CreateContext();
-        config = std::make_unique<Config>();
+        config.emplace(Config{});
 
-        gui = std::make_unique<GUI>();
+        gui.emplace(GUI{});
 
         hooks->install();
 
@@ -745,8 +752,8 @@ static int pollEvent(SDL_Event* event) noexcept
 
 Hooks::Hooks() noexcept
 {
-    interfaces = std::make_unique<const Interfaces>();
-    memory = std::make_unique<const Memory>();
+    interfaces.emplace(Interfaces{});
+    memory.emplace(Memory{});
 
     pollEvent = *reinterpret_cast<decltype(pollEvent)*>(memory->pollEvent);
     *reinterpret_cast<decltype(::pollEvent)**>(memory->pollEvent) = ::pollEvent;

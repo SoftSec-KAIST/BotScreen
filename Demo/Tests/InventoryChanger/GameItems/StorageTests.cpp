@@ -1,11 +1,15 @@
+#include <limits>
 #include <string_view>
 
 #include <gtest/gtest.h>
 
+#include <InventoryChanger/GameItems/Enums.h>
 #include <InventoryChanger/GameItems/Storage.h>
 #include <InventoryChanger/GameItems/Lookup.h>
 
-namespace game_items
+#include <SDK/ItemSchema.h>
+
+namespace inventory_changer::game_items
 {
 namespace
 {
@@ -47,7 +51,7 @@ Item& addToStorage(Storage& storage, ItemType type, EconRarity rarity, WeaponId 
         storage.addPatch(0, {}, rarity, iconPath);
         break;
     case ItemType::Sticker:
-        storage.addSticker(0, {}, rarity, iconPath, 0, {}, 0, false);
+        storage.addSticker(0, {}, rarity, iconPath, csgo::Tournament{}, {}, 0, false);
         break;
     case ItemType::Music:
         storage.addMusic(0, {}, iconPath);
@@ -65,7 +69,7 @@ Item& addToStorage(Storage& storage, ItemType type, EconRarity rarity, WeaponId 
         storage.addAgent(rarity, weaponID, iconPath);
         break;
     case ItemType::Case:
-        storage.addCase(rarity, weaponID, 0, iconPath);
+        storage.addCrate(rarity, weaponID, 0, csgo::Tournament{}, {}, false, iconPath);
         break;
     case ItemType::CaseKey:
         storage.addCaseKey(rarity, weaponID, iconPath);
@@ -77,16 +81,16 @@ Item& addToStorage(Storage& storage, ItemType type, EconRarity rarity, WeaponId 
         storage.addStatTrakSwapTool(rarity, weaponID, iconPath);
         break;
     case ItemType::ViewerPass:
-        storage.addViewerPass(rarity, weaponID, 0, iconPath);
+        storage.addViewerPass(rarity, weaponID, {}, iconPath);
         break;
     case ItemType::ServiceMedal:
         storage.addServiceMedal(rarity, 0, weaponID, iconPath);
         break;
     case ItemType::SouvenirToken:
-        storage.addSouvenirToken(rarity, weaponID, 0, iconPath);
+        storage.addSouvenirToken(rarity, weaponID, {}, iconPath);
         break;
     case ItemType::TournamentCoin:
-        storage.addTournamentCoin(rarity, weaponID, 0, iconPath);
+        storage.addTournamentCoin(rarity, weaponID, {}, 0, iconPath);
         break;
     case ItemType::VanillaKnife:
         storage.addVanillaKnife(weaponID, iconPath);
@@ -113,7 +117,7 @@ constexpr bool validateItemType(const Item& item, ItemType desiredType) noexcept
     case ItemType::Collectible: return item.isCollectible();
     case ItemType::NameTag: return item.isNameTag();
     case ItemType::Agent: return item.isAgent();
-    case ItemType::Case: return item.isCase();
+    case ItemType::Case: return item.isCrate();
     case ItemType::CaseKey: return item.isCaseKey();
     case ItemType::OperationPass: return item.isOperationPass();
     case ItemType::StatTrakSwapTool: return item.isStatTrakSwapTool();
@@ -143,6 +147,13 @@ TEST_P(GameItemsStorageTest, AddedItemHasCorrectType) {
     Storage storage;
     const auto& item = addToStorage(storage, GetParam(), EconRarity::Default, WeaponId::None, 0, {});
     ASSERT_TRUE(validateItemType(item, GetParam()));
+}
+
+TEST_P(GameItemsStorageTest, AddingItemCopiesIconPath) {
+    Storage storage;
+    const std::string iconPath = "image.png";
+    const auto& item = addToStorage(storage, GetParam(), EconRarity::Default, WeaponId::None, 0, iconPath);
+    ASSERT_NE(item.getIconPath().data(), iconPath.c_str());
 }
 
 const auto typesToTest = testing::Values(
@@ -254,6 +265,90 @@ INSTANTIATE_TEST_SUITE_P(TypesWithConstantWeaponID, GameItemsStorageWeaponIdTest
         ItemTypeAndWeaponID{ ItemType::Music, WeaponId::MusicKit }
     )
 );
+
+TEST(InventoryChanger_GameItems_StorageTest, FirstAddedItemIsFirstInItemList) {
+    Storage storage;
+    storage.addNameTag(EconRarity::Gray, WeaponId::NameTag, {});
+    storage.addAgent(EconRarity::Pink, WeaponId::None, {});
+    ASSERT_TRUE(storage.getItems()[0].isNameTag());
+}
+
+Item& addTournamentItem(Storage& storage, ItemType type, csgo::Tournament tournament)
+{
+    switch (type) {
+    case ItemType::Case:
+        storage.addCrate(EconRarity::Blue, WeaponId::None, 0, tournament, {}, false, {});
+        break;
+    case ItemType::ViewerPass:
+        storage.addViewerPass(EconRarity::Blue, WeaponId::None, tournament, {});
+        break;
+    case ItemType::SouvenirToken:
+        storage.addSouvenirToken(EconRarity::Blue, WeaponId::None, tournament, {});
+        break;
+    case ItemType::TournamentCoin:
+        storage.addTournamentCoin(EconRarity::Blue, WeaponId::None, tournament, 0, {});
+        break;
+    default:
+        throw "Unhandled item type!";
+    }
+    return storage.getItems().back();
+}
+
+class InventoryChanger_GameItems_Storage_TournamentIdTest : public testing::TestWithParam<std::tuple<ItemType, csgo::Tournament>> {};
+
+TEST_P(InventoryChanger_GameItems_Storage_TournamentIdTest, AddedItemHasCorrectTournamentID) {
+    Storage storage;
+    const auto [itemType, tournament] = GetParam();
+    const auto& item = addTournamentItem(storage, itemType, tournament);
+    ASSERT_EQ(storage.getTournamentEventID(item), tournament);
+}
+
+INSTANTIATE_TEST_SUITE_P(, InventoryChanger_GameItems_Storage_TournamentIdTest,
+    testing::Combine(testing::Values(ItemType::Case, ItemType::ViewerPass, ItemType::SouvenirToken, ItemType::TournamentCoin),
+                     testing::Values(0, 19, (std::numeric_limits<std::uint8_t>::max)())));
+
+class InventoryChanger_GameItems_Storage_DefaultTournamentGraffitiIdTest : public testing::TestWithParam<std::uint16_t> {};
+
+TEST_P(InventoryChanger_GameItems_Storage_DefaultTournamentGraffitiIdTest, AddedTournamentCoinHasCorrectDefaultTournamentGraffitiId) {
+    Storage storage;
+    storage.addTournamentCoin(EconRarity::Red, WeaponId::None, {}, GetParam(), {});
+    ASSERT_EQ(storage.getDefaultTournamentGraffitiID(storage.getItems().back()), GetParam());
+}
+
+INSTANTIATE_TEST_SUITE_P(, InventoryChanger_GameItems_Storage_DefaultTournamentGraffitiIdTest,
+    testing::Values(0, 5555, (std::numeric_limits<std::uint16_t>::max)()));
+
+class InventoryChanger_GameItems_Storage_CrateSeriesTest : public testing::TestWithParam<std::uint16_t> {};
+
+TEST_P(InventoryChanger_GameItems_Storage_CrateSeriesTest, AddedCrateHasCorrectSeriesNumber) {
+    Storage storage;
+    storage.addCrate(EconRarity::Blue, WeaponId::None, GetParam(), static_cast<csgo::Tournament>(255), TournamentMap::Vertigo, true, {});
+    ASSERT_EQ(storage.getCrateSeries(storage.getItems().back()), GetParam());
+}
+
+INSTANTIATE_TEST_SUITE_P(, InventoryChanger_GameItems_Storage_CrateSeriesTest,
+    testing::Values(0, 300, (std::numeric_limits<std::uint16_t>::max)()));
+
+class InventoryChanger_GameItems_Storage_TournamentMapTest : public testing::TestWithParam<TournamentMap> {};
+
+TEST_P(InventoryChanger_GameItems_Storage_TournamentMapTest, AddedCrateHasCorrectTournamentMap) {
+    Storage storage;
+    storage.addCrate(EconRarity::Blue, WeaponId::None, 0xFFFF, static_cast<csgo::Tournament>(0xFF), GetParam(), true, {});
+    ASSERT_EQ(storage.getTournamentMap(storage.getItems().back()), GetParam());
+}
+
+INSTANTIATE_TEST_SUITE_P(, InventoryChanger_GameItems_Storage_TournamentMapTest,
+    testing::Values(TournamentMap::None, TournamentMap::Mirage, TournamentMap::Vertigo, static_cast<TournamentMap>(0x7F)));
+
+class InventoryChanger_GameItems_Storage_SouvenirPackageTest : public testing::TestWithParam<bool> {};
+
+TEST_P(InventoryChanger_GameItems_Storage_SouvenirPackageTest, AddedCrateIsSouvenirPackage) {
+    Storage storage;
+    storage.addCrate(EconRarity::Blue, WeaponId::None, 1234, csgo::Tournament::EleagueAtlanta2017, TournamentMap::Train, GetParam(), {});
+    ASSERT_EQ(storage.isSouvenirPackage(storage.getItems().back()), GetParam());
+}
+INSTANTIATE_TEST_SUITE_P(, InventoryChanger_GameItems_Storage_SouvenirPackageTest,
+    testing::Values(true, false));
 
 }
 }

@@ -3,7 +3,6 @@ target_sources(OsirisOBJ PRIVATE
   AntiAim.cpp
   Backtrack.cpp
   Chams.cpp
-  Dumps.cpp
   EnginePrediction.cpp
   Glow.cpp
   Misc.cpp
@@ -12,5 +11,3 @@ target_sources(OsirisOBJ PRIVATE
   Triggerbot.cpp
   Visuals.cpp
 )
-
-add_subdirectory(DetectModel)

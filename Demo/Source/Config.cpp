@@ -4,11 +4,14 @@
 #include <iomanip>
 #include <iterator>
 #include <system_error>
+#include <tuple>
 
 #ifdef _WIN32
 #include <Windows.h>
 #include <shellapi.h>
 #include <ShlObj.h>
+#elif __linux__
+#include <unistd.h>
 #endif
 
 #include "nlohmann/json.hpp"
@@ -20,6 +23,7 @@
 #include "Hacks/Backtrack.h"
 #include "Hacks/Glow.h"
 #include "InventoryChanger/InventoryChanger.h"
+#include "InventoryChanger/InventoryConfig.h"
 #include "Hacks/Sound.h"
 #include "Hacks/Visuals.h"
 #include "Hacks/Misc.h"
@@ -308,7 +312,7 @@ void Config::load(const char8_t* name, bool incremental) noexcept
     Backtrack::fromJson(j["Backtrack"]);
     Glow::fromJson(j["Glow"]);
     Visuals::fromJson(j["Visuals"]);
-    InventoryChanger::fromJson(j["Inventory Changer"]);
+    fromJson(j["Inventory Changer"], inventory_changer::InventoryChanger::instance());
     Sound::fromJson(j["Sound"]);
     Misc::fromJson(j["Misc"]);
 }
@@ -525,7 +529,7 @@ void Config::save(size_t id) const noexcept
     j["Visuals"] = Visuals::toJson();
     j["Misc"] = Misc::toJson();
     j["Style"] = style;
-    j["Inventory Changer"] = InventoryChanger::toJson();
+    j["Inventory Changer"] = toJson(inventory_changer::InventoryChanger::instance());
 
     removeEmptyObjects(j);
 
@@ -568,7 +572,7 @@ void Config::reset() noexcept
     Backtrack::resetConfig();
     Glow::resetConfig();
     Visuals::resetConfig();
-    InventoryChanger::resetConfig();
+    inventory_changer::InventoryChanger::instance().reset();
     Sound::resetConfig();
     Misc::resetConfig();
 }
@@ -595,7 +599,10 @@ void Config::openConfigDir() const noexcept
 #ifdef _WIN32
     ShellExecuteW(nullptr, L"open", path.wstring().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 #else
-    int ret = std::system(("xdg-open " + path.string()).c_str());
+    if (fork() == 0) {
+        constexpr auto xdgPath = "/usr/bin/xdg-open";
+        execl(xdgPath, xdgPath, path.string().c_str(), static_cast<char*>(nullptr));
+    }
 #endif
 }
 
