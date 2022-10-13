@@ -1,6 +1,6 @@
 # BotScreen
 
-This repository contains implementation for paper ["BotScreen: Enabling Distributed and Real-Time Aimbot Detection"](https://).
+This repository contains implementation for paper ["BotScreen: Trust Everybody, but Cut the Aimbots Yourself"](https://).
 
 ## Dependencies
 
@@ -46,7 +46,7 @@ We make pre-evaluated data avaiable to download [here](https://drive.google.com/
 
 ### Experiments
 
-Scripts in `experiments/` and `comp_study` contain implementation for experiments appearing in the paper. Each code can be run as follows:
+Scripts in `experiments/` and `comp_study/` contain implementation for experiments appearing in the paper. Each code can be run as follows:
 ```exp
 $ make [exp_name] [arguments]
 ```
@@ -85,7 +85,7 @@ If you find the provided code useful, please cite our work.
 ```
 @inproceedings{
     botscreen,
-    title={BotScreen: Enabling Distributed and Real-Time Aimbot Detection},
+    title={BotScreen: Trust Everybody, but Cut the Aimbots Yourself},
     author={Minyeop Choi and Gihyuk Ko and Sang Kil Cha},
     booktitle={TBD},
     year={TBD}
