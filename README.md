@@ -70,6 +70,7 @@ The following table summarizes experiments and corresponding results in the pape
 | `comp_study/os_cac` | Pred. performance of `os_CAC` | - | VI-C |
 | `comp_study/os_lac` | Pred. performance of `os_LAC` | - | VI-C |
 | `comp_study/os_smac` | Pred. performance of `os_SMAC` | - | VI-C |
+| `comp_study/history` | History-based detection accuracies | [Table 10] | D |
 | `experiments/exp_cnt` | Average number of reports and FPs by each client, per game | - | VI-C |
 
 Note that in order for `experiments/exp_obs` to properly output expected results, running `experiments/stat_obs` must be preceeded. Additionally, `.tsv` files will be saved once `save_results=True` argument is passed alongside other arguments.
