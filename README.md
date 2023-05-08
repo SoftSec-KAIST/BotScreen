@@ -56,30 +56,29 @@ The following table summarizes experiments and corresponding results in the pape
 
 | exp_name | summary | outputs | section |
 | - | - | - | - |
-| `experiments/sim_atk` | Numerical analysis | [Figure 4](./figures/fig_04_num.pdf) | V-C |
-| `experiments/exp_bench` | Aimbot prediction performance | [`bench.tsv`](./bench/bench.tsv) | VI-B |
-| `experiments/exp_roc` | Plot ROC curves | [Figure 5](./figures/fig_05_roc.pdf) | VI-B |
-| `experiments/exp_std` | Difference btw. anomaly scores | [Figure 6](./figures/fig_06_std.pdf) | VI-D |
-| `experiments/stats_obs` | Stats of obs. rate (required before exp_obs) | [`data_loss/`](./data_loss) | VI-D |
-| `experiments/exp_obs` | Effect of obs. rate to accuracy | [Figure 7](./figures/fig_07_obs.pdf) | VI-D |
-| `experiments/exp_atk` | Effect of dishonest players | [Figure 8](./figures/fig_08_atk.pdf), [`bench_atk.tsv`](./bench/bench_atk.tsv) | VI-E |
-| `comp_study/th_vara` | Pred. performance of `th_VarA` | - | VI-C |
-| `comp_study/th_acca` | Pred. performance of `th_AccA` | - | VI-C |
-| `comp_study/th_kill` | Pred. performance of `th_Kill` | - | VI-C |
-| `comp_study/ks_acca` | Pred. performance of `ks_AccA` | - | VI-C |
-| `comp_study/os_cac` | Pred. performance of `os_CAC` | - | VI-C |
-| `comp_study/os_lac` | Pred. performance of `os_LAC` | - | VI-C |
-| `comp_study/os_smac` | Pred. performance of `os_SMAC` | - | VI-C |
-| `comp_study/history` | History-based detection accuracies | [Table 10] | D |
-| `experiments/exp_cnt` | Average number of reports and FPs by each client, per game | - | VI-C |
+| `experiments/exp_bench` | Aimbot prediction performance | [`bench.tsv`](./bench/bench.tsv) | 5.2.1 |
+| `experiments/exp_roc` | Plot ROC curves | Figure 4 | 5.2.2 |
+| `experiments/exp_std` | Difference btw. anomaly scores | Figure 7 | 5.5.1 |
+| `experiments/stats_obs` | Stats of obs. rate (required before exp_obs) | Figure 8 | 5.5.2 |
+| `experiments/exp_obs` | Effect of obs. rate to accuracy | Figure 8 | 5.5.2 |
+| `comp_study/th_vara` | Pred. performance of `th_VarA` | - | 5.4 |
+| `comp_study/th_acca` | Pred. performance of `th_AccA` | - | 5.4 |
+| `comp_study/th_kill` | Pred. performance of `th_Kill` | - | 5.4 |
+| `comp_study/ks_acca` | Pred. performance of `ks_AccA` | - | 5.4 |
+| `comp_study/os_cac` | Pred. performance of `os_CAC` | - | 5.4 |
+| `comp_study/os_lac` | Pred. performance of `os_LAC` | - | 5.4 |
+| `comp_study/os_smac` | Pred. performance of `os_SMAC` | - | 5.4 |
+| `comp_study/history` | History-based detection accuracies | Table 10 | Appendix D |
 
 Note that in order for `experiments/exp_obs` to properly output expected results, running `experiments/stat_obs` must be preceeded. Additionally, `.tsv` files will be saved once `save_results=True` argument is passed alongside other arguments.
 
 By default, we did not include any figures, data and benchmark results. The files in the outputs column will be accessible once the experiments are done.
 
-## End-to-End Implementation
+## Demo Implementation
 
-[TODO]
+We implement the demo of BotScreen on [Osiris](https://github.com/danielkrupinski/Osiris/tree/5af83362a69367fe3ed441a5e6218762a8196372), open-source memory-based cheat for CS:GO.
+
+In this implementation, we apply the best accuracy model from game-based evaluation for the detection model.
 
 ## Citation
 If you find the provided code useful, please cite our work.
