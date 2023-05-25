@@ -43,53 +43,45 @@ def gacc(lst):
 
 bins = []
 
-try:
-    with open("f.pickle", "rb") as f:
-        bins = pickle.load(f)
-except:
-    for game in sorted(glob('data_processed/*/*')):
-        print(game)
-        f_cheat = f'{game}/cheater'
-        with open(f_cheat, 'r') as f:
-            rows = f.readlines()
-            cheater = [int(c[0]) for c in rows] if len(rows) else []
+for game in sorted(glob('data_processed/*/*')):
+    print(game)
+    f_cheat = f'{game}/cheater'
+    with open(f_cheat, 'r') as f:
+        rows = f.readlines()
+        cheater = [int(c[0]) for c in rows] if len(rows) else []
 
-        f_player = f'{game}/player_id'
-        with open(f_player, 'r') as f:
-            rows = f.readlines()
-            player_id = [int(c[0]) for c in rows]
+    f_player = f'{game}/player_id'
+    with open(f_player, 'r') as f:
+        rows = f.readlines()
+        player_id = [int(c[0]) for c in rows]
 
-        ds = [[] for i in player_id]
+    ds = [[] for i in player_id]
 
-        for j,o in enumerate(player_id):
-            log_player = f'{game}/obs_{o}/log_player_{o}.csv'
-            df = pd.read_csv(log_player)
+    for j,o in enumerate(player_id):
+        log_player = f'{game}/obs_{o}/log_player_{o}.csv'
+        df = pd.read_csv(log_player)
 
-            now_target = -1
-            now_data = []
-            for c, d in df.iterrows():
-                if np.isnan(d["tar"]):
-                    if now_target != -1:
-                        now_target = -1
-                        r = gacc(now_data)
-                        ds[o] += r
-                        now_data = []
+        now_target = -1
+        now_data = []
+        for c, d in df.iterrows():
+            if np.isnan(d["tar"]):
+                if now_target != -1:
+                    now_target = -1
+                    r = gacc(now_data)
+                    ds[o] += r
+                    now_data = []
+            else:
+                target = int(d["tar"])
+                if now_target != target and len(now_data) != 0:
+                    now_target = target
+                    r = gacc(now_data)
+                    ds[o] += r
+                    now_data = []
                 else:
-                    target = int(d["tar"])
-                    if now_target != target and len(now_data) != 0:
-                        now_target = target
-                        r = gacc(now_data)
-                        ds[o] += r
-                        now_data = []
-                    else:
-                        now_target = target
-                        now_data.append((d["s_x"], d["s_y"], d["s_z"]))
+                    now_target = target
+                    now_data.append((d["s_x"], d["s_y"], d["s_z"]))
 
-        bins.append((cheater, ds))
-
-import pickle
-with open("f.pickle", "wb") as f:
-    pickle.dump(bins, f, pickle.HIGHEST_PROTOCOL)
+    bins.append((cheater, ds))
 
 #bins = list(filter(lambda x: len(x[0]) == 2, bins))
 
