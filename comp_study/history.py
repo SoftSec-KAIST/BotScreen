@@ -25,43 +25,14 @@ os_LAC = [[False, False, False, False, False, True, True, True, True, True, True
 os_SMAC = [[True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [True, True, True, True, True, True, True], [False, False, False, False, False, True, True], [False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, False, False, False, False, False, False, False], [False, False, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, True, True, True, True, True, True, True, True, True], [True, True, True, True, True, True, True, True, True, True, True]]
 botscreen = [[False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, True, True, True, True], [False, False, False, False, False, True, True], [False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, True, True, True, True, True, True, True, True, True], [False, False, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True], [False, False, False, False, False, False, True, True, True, True], [False, False, False, False, True, True, True, True, True, True, True]]
 
-print("th_VacA")
-for i in range(14):
-    tn, fp, fn, tp = confusion_matrix(true[i], th_VacA[i])
-    print("%.3f (%d/%d/%d)"%((tn+tp)/(tn+fp+fn+tp), fp, fn, tn+fp+fn+tp))
-    
-print("th_AccA")
-for i in range(14):
-    tn, fp, fn, tp = confusion_matrix(true[i], th_AccA[i])
-    print("%.3f (%d/%d/%d)"%((tn+tp)/(tn+fp+fn+tp), fp, fn, tn+fp+fn+tp))
+import csv
 
-print("th_Kill")
-for i in range(14):
-    tn, fp, fn, tp = confusion_matrix(true[i], th_Kill[i])
-    print("%.3f (%d/%d/%d)"%((tn+tp)/(tn+fp+fn+tp), fp, fn, tn+fp+fn+tp))
+lst = ['th_VacA', 'th_AccA', 'th_Kill', 'ks_AccA', 'os_CAC', 'os_LAC', 'os_SMAC', 'botscreen']
 
-print("ks_AccA")
-for i in range(14):
-    tn, fp, fn, tp = confusion_matrix(true[i], ks_AccA[i])
-    print("%.3f (%d/%d/%d)"%((tn+tp)/(tn+fp+fn+tp), fp, fn, tn+fp+fn+tp))
-
-print("os_CAC")
-for i in range(14):
-    tn, fp, fn, tp = confusion_matrix(true[i], os_CAC[i])
-    print("%.3f (%d/%d/%d)"%((tn+tp)/(tn+fp+fn+tp), fp, fn, tn+fp+fn+tp))
-
-print("os_LAC")
-for i in range(14):
-    tn, fp, fn, tp = confusion_matrix(true[i], os_LAC[i])
-    print("%.3f (%d/%d/%d)"%((tn+tp)/(tn+fp+fn+tp), fp, fn, tn+fp+fn+tp))
-
-print("os_SMAC")
-for i in range(14):
-    tn, fp, fn, tp = confusion_matrix(true[i], os_SMAC[i])
-    print("%.3f (%d/%d/%d)"%((tn+tp)/(tn+fp+fn+tp), fp, fn, tn+fp+fn+tp))
-
-print("botscreen")
-for i in range(14):
-    tn, fp, fn, tp = confusion_matrix(true[i], botscreen[i])
-    print("%.3f (%d/%d/%d)"%((tn+tp)/(tn+fp+fn+tp), fp, fn, tn+fp+fn+tp))
-    
+for exp in lst:
+    with open('history_%s.tsv'%exp, 'w', encoding='utf-8', newline='') as f:
+        tw = csv.writer(f, delimiter='\t')
+        tw.writerow(['id', 'tn', 'fp', 'fn', 'tp'])
+        for i in range(14):
+            tn, fp, fn, tp = confusion_matrix(true[i], eval(exp)[i])
+            tw.writerow([i, tn, fp, fn, tp])
