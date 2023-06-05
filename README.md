@@ -16,7 +16,7 @@ $ pip3 install -r requirements.txt
 
 We make pre-processed game-play data available [here](https://zenodo.org/record/8003842). The compressed file from the link contains `data_processed/` folder, where the users can simply put them in the root directory.
 
-While no longer functional, we include the script used in preprocessing in the repository ([`preprocess.py`](./preprocess.py)).
+Due to the privacy reasons, we cannot share the raw data, but we include the script used in our preprocessing step in the repository ([`preprocess.py`](./preprocess.py)) for future reference.
 
 ### Training SGRU models
 
