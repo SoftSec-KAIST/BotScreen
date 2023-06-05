@@ -1,11 +1,11 @@
 # BotScreen
 
-This repository contains implementation for paper ["BotScreen: Trust Everybody, but Cut the Aimbots Yourself"](https://).
+This repository contains the prototype implementation of [BotScreen](https://),
+which is an aimbot detection system for first-person shooter games.
 
 ## Dependencies
 
-The code requires dependencies that can be installed using the `pip` environment:
-
+To run the code, first install the following dependencies:
 ```run
 $ pip3 install -r requirements.txt
 ```
@@ -14,7 +14,7 @@ $ pip3 install -r requirements.txt
 
 ### Downloading preprocessed data
 
-We make pre-processed gameplay data available [here](https://zenodo.org/record/8003842). The compressed file from the link contains `data_processed/` folder, where the users can simply put them in the root directory.
+We make pre-processed game-play data available [here](https://zenodo.org/record/8003842). The compressed file from the link contains `data_processed/` folder, where the users can simply put them in the root directory.
 
 While no longer functional, we include the script used in preprocessing in the repository ([`preprocess.py`](./preprocess.py)).
 
@@ -86,7 +86,7 @@ The following table summarizes the major changes:
 | - | - |
 | `Demo/Source/Hacks/Dump.cpp` | Game data extraction, Implementation of `Data Manager` |
 | `Demo/Source/EventListener.cpp` | Additional event listener for BotScreen |
-| `Demo/Source/Hooks.cpp` | Send `data manager` game data from hooked function `createMove` | 
+| `Demo/Source/Hooks.cpp` | Send `data manager` game data from hooked function `createMove` |
 | `Demo/SGX_MDL/SGX_MDL.c` | Implementation of `Detector` |
 | `Demo/SGX_MDL/state.h` | Weights for detection model |
 
@@ -94,9 +94,10 @@ For detection model, we apply the best accuracy model from game-based evaluation
 
 Once you inject BotScreen into CS:GO client and start the game, BotScreen will send the detection report to the server defined in `Demo/Source/Hacks/Dump.cpp`.
 
-Note that this demo works on Windows only and we will not update the Osiris due to ethical reason. This demo might crash in the latest CS:GO client. 
+Note that this demo works on Windows only and we will not update the Osiris due to ethical reason. This demo might crash in the latest CS:GO client.
 
 ## Citation
+
 If you find the provided code useful, please cite our work.
 ```
 @inproceedings{
