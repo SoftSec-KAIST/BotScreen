@@ -53,7 +53,7 @@ The following table summarizes experiments and corresponding results in the pape
 | exp_name | summary | outputs | section |
 | - | - | - | - |
 | `experiments/exp_bench` | Aimbot prediction performance | [`bench.tsv`](./bench/bench.tsv) | 5.2.1 |
-| `experiments/exp_roc` | Plot ROC curves | Figure 4 | 5.2.2 |
+| `experiments/exp_roc` | Plot ROC curves | Figure 4 | 5.2.1 |
 | `experiments/exp_std` | Difference btw. anomaly scores | Figure 7 | 5.5.1 |
 | `experiments/stat_obs` | Stats of obs. rate (required before exp_obs) | Figure 8 | 5.5.2 |
 | `experiments/exp_obs` | Effect of obs. rate to accuracy | Figure 8 | 5.5.2 |
