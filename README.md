@@ -94,7 +94,7 @@ For detection model, we apply the best accuracy model from game-based evaluation
 
 Once you inject BotScreen into CS:GO client and start the game, BotScreen will send the detection report to the server defined in `Demo/Source/Hacks/Dump.cpp`.
 
-Note that this demo works on Windows only and we will not update the Osiris due to ethical reason. This demo might crash in the latest CS:GO client.
+Note that this demo works on Windows only and we will not update the Osiris due to ethical reason. This demo was tested against CS:GO client buildid 10852507, however it might crash on the latest CS:GO client.
 
 ## Citation
 
