@@ -14,7 +14,7 @@ $ pip3 install -r requirements.txt
 
 ### Downloading preprocessed data
 
-We make pre-processed game-play data available [here](https://zenodo.org/record/8003842). The compressed file from the link contains `data_processed/` folder, where the users can simply put them in the root directory.
+We make pre-processed game-play data available [here](https://doi.org/10.5281/zenodo.8058051). The compressed file from the link contains `data_processed/` folder, where the users can simply put them in the root directory.
 
 Due to the privacy reasons, we cannot share the raw data, but we include the script used in our preprocessing step in the repository ([`preprocess.py`](./preprocess.py)) for future reference.
 
@@ -72,13 +72,13 @@ By default, we did not include any figures, data and benchmark results. The file
 
 ## Artifacts
 
-For exact replication of the results in the paper, it is recommended to download weights of pre-trained SGRU models from [this link](https://zenodo.org/record/8003842).
+For exact replication of the results in the paper, it is recommended to download weights of pre-trained SGRU models from [this link](https://doi.org/10.5281/zenodo.8058051).
 
 The `trained_models/` consists of 7 pre-trained model weights and a JSON configuration file (`config.json`). Also, we include pre-evaluated data in `trained modes/` for reproduce the experiments in our paper.
 
-## Demo Implementation
+## Data Collection & Demo Implementation
 
-We implement the demo of BotScreen on [Osiris](https://github.com/danielkrupinski/Osiris/tree/5af83362a69367fe3ed441a5e6218762a8196372), open-source memory-based cheat for CS:GO.
+We implement the game-play data collection tool and demo of BotScreen on [Osiris](https://github.com/danielkrupinski/Osiris/tree/5af83362a69367fe3ed441a5e6218762a8196372), open-source memory-based cheat for CS:GO.
 
 The following table summarizes the major changes:
 
@@ -89,6 +89,8 @@ The following table summarizes the major changes:
 | `Demo/Source/Hooks.cpp` | Send `data manager` game data from hooked function `createMove` |
 | `Demo/SGX_MDL/SGX_MDL.c` | Implementation of `Detector` |
 | `Demo/SGX_MDL/state.h` | Weights for detection model |
+
+By changing the defined macro valuen `DUMP_LOG` to 1, Osiris will saves the 2 log files in `DUMP_PATH`; `log_event.csv` which contains the game events and `log_player.csv` which contains player's information only who is rendered in the client screen.
 
 For detection model, we apply the best accuracy model from game-based evaluation for the detection model.
 

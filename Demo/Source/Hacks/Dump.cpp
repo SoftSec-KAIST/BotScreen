@@ -3,6 +3,10 @@
 #define ENCLAVE_FILE "C:\\dump\\SGX_MDL.signed.dll"
 //#define ENCLAVE_FILE "C:\\Users\\okas832\\Desktop\\new_SGX\\Osiris-master\\Prerelease\\SGX_MDL.signed.dll"
 #define DUMP_LOG 0
+#define DUMP_PATH "C:\\dump\\"
+
+#define SERVER_IP "192.168.0.6"
+#define SERVER_PORT 55554
 
 #include "SGX_MDL_u.h"
 #include "sgx_urts.h"
@@ -117,7 +121,7 @@ static short getEntityIdByUserId(short UserId) noexcept
 void Dump::DumpEvent(GameEvent* event) noexcept
 {
 #if DUMP_LOG
-    FILE* fout = fopen("c:\\dump\\log_event.csv", "a+");
+    FILE* fout = fopen(DUMP_PATH "log_event.csv", "a+");
 #endif
     PlayerInfo playerInfo1;
     switch (fnv::hashRuntime(event->getName()))
@@ -209,8 +213,8 @@ void Dump::DumpGameData() noexcept
 
         memset(&servAddr, 0, sizeof(servAddr));
         servAddr.sin_family = AF_INET;
-        servAddr.sin_addr.s_addr = inet_addr("192.168.0.5");
-        servAddr.sin_port = htons(55554);
+        servAddr.sin_addr.s_addr = inet_addr(SERVER_IP);
+        servAddr.sin_port = htons(SERVER_PORT);
 
         connect(hSocket, (SOCKADDR*)&servAddr, sizeof(servAddr));
 
@@ -227,7 +231,7 @@ void Dump::DumpGameData() noexcept
         return;
 
 #if DUMP_LOG
-    FILE* fout = fopen("c:\\dump\\log_player.csv", "a+");
+    FILE* fout = fopen(DUMP_PATH "log_player.csv", "a+");
 #endif
 
     uint64_t time = GetSystemTime();
