@@ -102,11 +102,10 @@ Note that this demo works only on Windows, and it was tested against CS:GO clien
 
 If you find the provided code useful, please cite our work.
 ```
-@inproceedings{
-    botscreen,
+@inproceedings{botscreen,
     title={BotScreen: Trust Everybody, but Cut the Aimbots Yourself},
     author={Minyeop Choi and Gihyuk Ko and Sang Kil Cha},
-    booktitle={TBD},
+    booktitle={Proceedings of the USENIX Security Symposium},
     year={TBD}
 }
 ```
