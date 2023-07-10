@@ -5,7 +5,7 @@ which is an aimbot detection system for first-person shooter games.
 
 ## Dependencies
 
-To run the code, first install the following dependencies:
+Our implementation is written in Python 3. We recommend using Python version 3.10, as it is the version we have developed and tested our codes in. To run the code, first install the following dependencies:
 ```run
 $ pip3 install -r requirements.txt
 ```
@@ -74,13 +74,13 @@ By default, we did not include any figures, data and benchmark results. The file
 
 For exact replication of the results in the paper, it is recommended to download weights of pre-trained SGRU models from [this link](https://doi.org/10.5281/zenodo.8058051).
 
-The `trained_models/` consists of 7 pre-trained model weights and a JSON configuration file (`config.json`). Also, we include pre-evaluated data in `trained modes/` for reproduce the experiments in our paper.
+`trained_models/` directory consists of 7 pre-trained model weights and a JSON configuration file (`config.json`). We also include pre-evaluated data in `trained models/` for a faster reproduction of the experiments in our paper.
 
 ## Data Collection & Demo Implementation
 
-We implement the game-play data collection tool and demo of BotScreen on [Osiris](https://github.com/danielkrupinski/Osiris/tree/5af83362a69367fe3ed441a5e6218762a8196372), open-source memory-based cheat for CS:GO.
+We implement game-play data collection tool and demo of BotScreen on [Osiris](https://github.com/danielkrupinski/Osiris/tree/5af83362a69367fe3ed441a5e6218762a8196372), open-source memory-based cheat for CS:GO.
 
-The following table summarizes the major changes:
+The following table summarizes major modifications done on Osiris:
 
 | Path | Description |
 | - | - |
@@ -90,7 +90,7 @@ The following table summarizes the major changes:
 | `Demo/SGX_MDL/SGX_MDL.c` | Implementation of `Detector` |
 | `Demo/SGX_MDL/state.h` | Weights for detection model |
 
-By changing the defined macro valuen `DUMP_LOG` to 1, Osiris will saves the 2 log files in `DUMP_PATH`; `log_event.csv` which contains the game events and `log_player.csv` which contains player's information only who is rendered in the client screen.
+By changing the pre-defined macro value `DUMP_LOG` to 1, Osiris will save two log files in `DUMP_PATH`, as the game proceeds; `log_event.csv` which logs game events such as 'fire', 'hit', or 'death', and `log_player.csv` which contains information of the players who is currently being rendered (i.e., visible) in the client's screen.
 
 For detection model, we apply the best accuracy model from game-based evaluation for the detection model.
 
