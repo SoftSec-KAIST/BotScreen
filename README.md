@@ -103,9 +103,9 @@ Note that this demo works only on Windows, and it was tested against CS:GO clien
 If you find the provided code useful, please cite our work.
 ```
 @inproceedings{botscreen,
-    title={BotScreen: Trust Everybody, but Cut the Aimbots Yourself},
+    title={{BotScreen}: Trust Everybody, but Cut the Aimbots Yourself},
     author={Minyeop Choi and Gihyuk Ko and Sang Kil Cha},
-    booktitle={Proceedings of the USENIX Security Symposium},
-    year={TBD}
+    booktitle = {32nd USENIX Security Symposium (USENIX Security 23)},
+    year = {2023},
 }
 ```
