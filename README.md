@@ -102,7 +102,8 @@ If you find the provided code useful, please cite our work.
 @inproceedings{botscreen,
     title={{BotScreen}: Trust Everybody, but Cut the Aimbots Yourself},
     author={Minyeop Choi and Gihyuk Ko and Sang Kil Cha},
-    booktitle = {32nd USENIX Security Symposium (USENIX Security 23)},
-    year = {2023},
+    booktitle = {Proceedings of the {USENIX} Security Symposium},
+    pages = {481--498},
+    year = {2023}
 }
 ```
