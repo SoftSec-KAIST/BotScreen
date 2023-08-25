@@ -1,7 +1,6 @@
 # BotScreen
 
-This repository contains the prototype implementation of [BotScreen](https://),
-which is an aimbot detection system for first-person shooter games.
+This repository contains the prototype implementation of [BotScreen](https://www.usenix.org/conference/usenixsecurity23/presentation/choi), which is an aimbot detection system for first-person shooter games.
 
 ## Dependencies
 
@@ -24,13 +23,11 @@ For any user who wishes to train SGRU themselves, executing the following will t
 ```train
 $ make train [arguments]
 ```
-See descriptions in [`makefile`](./makefile) and [`utils/__init__.py`](./utils/__init__.py) for different choices in arguments. Leaving argument empty will default to the arguments used in the paper.
+See descriptions in [`makefile`](./makefile) and [`utils/__init__.py`](./utils/__init__.py) for different argument choices. Leaving argument empty will default to the arguments used in the paper.
 
 Initially, the code will take a while (10-20 mins) in filtering necessary events among entire collected data (see Section 4.2.1 for details). After the initialization step, filtered events will be stored in `trained_models/_frame`, and be used in training and further evaluations.
 
-When the training is done, the trained weights will be produce `gru_k0.pt` ~ `gru_k6.pt` in `trained_models`.
-
-<!--We make pre-filtered `_frame` available to download [here](https://).-->
+When the training is done, the trained weights will be saved `gru_k0.pt` ~ `gru_k6.pt` in `trained_models`.
 
 ### Evaluation
 
@@ -74,11 +71,11 @@ By default, we did not include any figures, data and benchmark results. The file
 
 For exact replication of the results in the paper, it is recommended to download weights of pre-trained SGRU models from [this link](https://doi.org/10.5281/zenodo.8058051).
 
-`trained_models/` directory consists of 7 pre-trained model weights and a JSON configuration file (`config.json`). We also include pre-evaluated data in `trained models/` for a faster reproduction of the experiments in our paper.
+The `trained_models/` directory consists of 7 pre-trained model weights and a JSON configuration file (`config.json`). We also include pre-evaluated data in `trained models/` for a faster reproduction of the experiments in our paper.
 
 ## Data Collection & Demo Implementation
 
-We implement game-play data collection tool and demo of BotScreen on [Osiris](https://github.com/danielkrupinski/Osiris/tree/5af83362a69367fe3ed441a5e6218762a8196372), open-source memory-based cheat for CS:GO.
+We implement game-play data collection tool and demo of BotScreen on [Osiris](https://github.com/danielkrupinski/Osiris/tree/5af83362a69367fe3ed441a5e6218762a8196372), an open-source memory-based cheat for CS:GO.
 
 The following table summarizes major modifications done on Osiris:
 
